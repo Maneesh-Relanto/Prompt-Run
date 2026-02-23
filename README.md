@@ -7,6 +7,10 @@
 [![Python](https://img.shields.io/pypi/pyversions/prompt-run)](https://pypi.org/project/prompt-run/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+[![Anthropic](https://img.shields.io/badge/Anthropic-Claude-cc785c?logo=anthropic&logoColor=white)](https://www.anthropic.com)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-412991?logo=openai&logoColor=white)](https://platform.openai.com)
+[![Ollama](https://img.shields.io/badge/Ollama-local-3d8bcd?logo=ollama&logoColor=white)](https://ollama.com)
+
 Prompts are code. Treat them like it.
 
 ```bash
