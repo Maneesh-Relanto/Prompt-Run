@@ -8,15 +8,10 @@ max_tokens: 64
 vars:
   text: string
   categories: string
-  allow_multiple: bool = false
 ---
 
-Classify the following text into one of these categories: {{categories}}
+Classify the following text into exactly one of these categories: {{categories}}
 
-{% if allow_multiple %}
-You may return multiple categories if appropriate, as a comma-separated list.
-{% endif %}
-
-Return ONLY the category name(s). No explanation.
+Return ONLY the category name. No explanation, no punctuation, nothing else.
 
 Text: {{text}}

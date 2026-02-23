@@ -108,6 +108,19 @@ vars:
 
 ## Commands
 
+### `prompt new`
+
+Scaffold a new `.prompt` file interactively — no YAML knowledge needed.
+
+```bash
+prompt new                      # guided wizard, prints to stdout
+prompt new summarize.prompt     # guided wizard, writes to file
+```
+
+You'll be asked for name, description, provider, model, temperature, and variables. The file is ready to run immediately.
+
+---
+
 ### `prompt run`
 
 Run a `.prompt` file against an LLM.
@@ -124,6 +137,12 @@ prompt run summarize.prompt --model gpt-4o --provider openai
 
 # Pipe stdin (auto-detected for single required var)
 cat article.txt | prompt run summarize.prompt
+
+# Stream tokens as they arrive
+prompt run summarize.prompt --var text="test" --stream
+
+# Save response to a file
+prompt run summarize.prompt --var text="test" --output summary.txt
 
 # Preview the resolved prompt without sending
 prompt run summarize.prompt --var text="test" --dry-run
@@ -142,6 +161,9 @@ prompt run summarize.prompt --var text="test" --json
 | `--temperature FLOAT` | Override temperature |
 | `--max-tokens INT` | Override max tokens |
 | `--system TEXT` | Override system prompt |
+| `--stream` | Stream tokens to stdout as they arrive |
+| `--stdin-var VAR` | Pipe stdin into a specific variable |
+| `--output FILE` | Write response to file instead of stdout |
 | `--dry-run` | Print resolved prompt, don't call LLM |
 | `--json` | Return JSON with response + token metadata |
 | `--show-prompt` | Print resolved prompt before response |

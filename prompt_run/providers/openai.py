@@ -32,8 +32,12 @@ class OpenAIProvider(BaseProvider):
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise ProviderError(
-                "OPENAI_API_KEY environment variable is not set.\n"
-                "Get your key at https://platform.openai.com/api-keys"
+                "OPENAI_API_KEY is not set.\n"
+                "\n"
+                "  Fix it:\n"
+                "    export OPENAI_API_KEY='sk-...'\n"
+                "\n"
+                "  Get a key at: https://platform.openai.com/api-keys"
             )
 
         # Optional Azure support
@@ -76,10 +80,17 @@ class OpenAIProvider(BaseProvider):
             )
         except self._sdk.AuthenticationError:
             raise ProviderError(
-                "Authentication failed. Check your OPENAI_API_KEY."
+                "OpenAI authentication failed.\n"
+                "\n"
+                "  Your OPENAI_API_KEY may be invalid or revoked.\n"
+                "  Check it at: https://platform.openai.com/api-keys"
             )
         except self._sdk.RateLimitError:
-            raise ProviderError("Rate limit hit. Please wait and try again.")
+            raise ProviderError(
+                "OpenAI rate limit exceeded.\n"
+                "  Wait a moment and try again, or check your usage at\n"
+                "  https://platform.openai.com/usage"
+            )
         except self._sdk.APIConnectionError as e:
             raise ProviderError(f"Connection error: {e}") from e
         except self._sdk.APIStatusError as e:
@@ -126,9 +137,18 @@ class OpenAIProvider(BaseProvider):
                 if delta and delta.content:
                     yield delta.content
         except self._sdk.AuthenticationError:
-            raise ProviderError("Authentication failed. Check your OPENAI_API_KEY.")
+            raise ProviderError(
+                "OpenAI authentication failed.\n"
+                "\n"
+                "  Your OPENAI_API_KEY may be invalid or revoked.\n"
+                "  Check it at: https://platform.openai.com/api-keys"
+            )
         except self._sdk.RateLimitError:
-            raise ProviderError("Rate limit hit. Please wait and try again.")
+            raise ProviderError(
+                "OpenAI rate limit exceeded.\n"
+                "  Wait a moment and try again, or check your usage at\n"
+                "  https://platform.openai.com/usage"
+            )
         except self._sdk.APIConnectionError as e:
             raise ProviderError(f"Connection error: {e}") from e
         except self._sdk.APIStatusError as e:

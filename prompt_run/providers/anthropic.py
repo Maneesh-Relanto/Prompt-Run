@@ -31,8 +31,12 @@ class AnthropicProvider(BaseProvider):
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
             raise ProviderError(
-                "ANTHROPIC_API_KEY environment variable is not set.\n"
-                "Get your key at https://console.anthropic.com/"
+                "ANTHROPIC_API_KEY is not set.\n"
+                "\n"
+                "  Fix it:\n"
+                "    export ANTHROPIC_API_KEY='sk-ant-...'\n"
+                "\n"
+                "  Get a key at: https://console.anthropic.com/settings/keys"
             )
         self._client = self._sdk.Anthropic(api_key=api_key)
 
@@ -64,7 +68,10 @@ class AnthropicProvider(BaseProvider):
             raise ProviderError(f"Connection error: {e}") from e
         except self._sdk.AuthenticationError:
             raise ProviderError(
-                "Authentication failed. Check your ANTHROPIC_API_KEY."
+                "Anthropic authentication failed.\n"
+                "\n"
+                "  Your ANTHROPIC_API_KEY may be invalid or revoked.\n"
+                "  Check it at: https://console.anthropic.com/settings/keys"
             )
         except self._sdk.RateLimitError:
             raise ProviderError("Rate limit hit. Please wait and try again.")
@@ -109,8 +116,17 @@ class AnthropicProvider(BaseProvider):
         except self._sdk.APIConnectionError as e:
             raise ProviderError(f"Connection error: {e}") from e
         except self._sdk.AuthenticationError:
-            raise ProviderError("Authentication failed. Check your ANTHROPIC_API_KEY.")
+            raise ProviderError(
+                "Anthropic authentication failed.\n"
+                "\n"
+                "  Your ANTHROPIC_API_KEY may be invalid or revoked.\n"
+                "  Check it at: https://console.anthropic.com/settings/keys"
+            )
         except self._sdk.RateLimitError:
-            raise ProviderError("Rate limit hit. Please wait and try again.")
+            raise ProviderError(
+                "Anthropic rate limit exceeded.\n"
+                "  Wait a moment and try again, or check your usage at\n"
+                "  https://console.anthropic.com/settings/limits"
+            )
         except self._sdk.APIStatusError as e:
             raise ProviderError(f"API error {e.status_code}: {e.message}") from e

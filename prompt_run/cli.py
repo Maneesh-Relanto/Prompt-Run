@@ -94,6 +94,8 @@ def cli():
 @click.option("--stream", "use_stream", is_flag=True, help="Stream tokens to stdout as they arrive")
 @click.option("--stdin-var", default="", metavar="VAR",
               help="Pipe stdin into this variable name instead of auto-detecting")
+@click.option("--output", "output_file", default="", metavar="FILE",
+              help="Write response to FILE instead of stdout")
 def cmd_run(
     prompt_file: Path,
     vars_list: tuple[str, ...],
@@ -107,6 +109,7 @@ def cmd_run(
     show_prompt: bool,
     use_stream: bool,
     stdin_var: str,
+    output_file: str,
 ):
     """Run a .prompt file against an LLM provider.
 
@@ -200,7 +203,12 @@ def cmd_run(
 
     # ── Plain output
     if result.response:
-        click.echo(result.response.content)
+        content = result.response.content
+        if output_file:
+            Path(output_file).write_text(content, encoding="utf-8")
+            _echo_success(f"✅ Response saved to {output_file}")
+        else:
+            click.echo(content)
         # Token summary to stderr so it doesn't pollute pipe output
         click.echo(
             click.style(
@@ -404,6 +412,119 @@ def cmd_inspect(prompt_file: Path, vars_list: tuple[str, ...]):
     else:
         click.echo(click.style("\n── Raw Prompt Body ──────────────────────────────", fg="cyan", bold=True))
         click.echo(pf.body)
+
+
+# ── prompt new ─────────────────────────────────────────────────────────────────
+
+_PROVIDER_DEFAULTS = {
+    "anthropic": "claude-sonnet-4-6",
+    "openai": "gpt-4o",
+    "ollama": "llama3",
+}
+
+
+@cli.command("new")
+@click.argument("output", default="", metavar="[FILE]")
+@click.option("--name", default="", help="Prompt name")
+@click.option("--provider", default="",
+              type=click.Choice(["anthropic", "openai", "ollama"], case_sensitive=False),
+              help="Provider to use")
+def cmd_new(output: str, name: str, provider: str):
+    """Scaffold a new .prompt file interactively.
+
+    \b
+    Examples:
+      prompt new                          # guided, writes to stdout
+      prompt new summarize.prompt         # guided, writes to file
+      prompt new classify.prompt --provider anthropic
+    """
+    click.echo(click.style("\n✨ Creating a new .prompt file", fg="cyan", bold=True))
+    click.echo(click.style("   Press Enter to accept defaults\n", fg="bright_black"))
+
+    # ── Gather inputs ────────────────────────────────────────────────────────
+    if not name:
+        # Derive default name from output filename if given
+        default_name = Path(output).stem if output else ""
+        name = click.prompt("  Prompt name", default=default_name or "my-prompt")
+
+    description = click.prompt("  Description", default="")
+
+    if not provider:
+        provider = click.prompt(
+            "  Provider",
+            type=click.Choice(["anthropic", "openai", "ollama"], case_sensitive=False),
+            default="anthropic",
+        )
+
+    default_model = _PROVIDER_DEFAULTS.get(provider, "")
+    model = click.prompt("  Model", default=default_model)
+    temperature = click.prompt("  Temperature", default=0.7)
+    max_tokens = click.prompt("  Max tokens", default=1024)
+    system = click.prompt("  System prompt (optional)", default="")
+
+    # ── Variable declarations ────────────────────────────────────────────────
+    vars_lines: list[str] = []
+    click.echo()
+    click.echo(click.style("  Variables (Enter blank name to stop):", fg="bright_black"))
+    while True:
+        var_name = click.prompt("    Variable name", default="").strip()
+        if not var_name:
+            break
+        var_type = click.prompt(
+            f"    Type for '{var_name}'",
+            type=click.Choice(["string", "int", "float", "bool"], case_sensitive=False),
+            default="string",
+        )
+        var_default = click.prompt(f"    Default value (blank = required)", default="").strip()
+        if var_default:
+            vars_lines.append(f"  {var_name}: {var_type} = {var_default}")
+        else:
+            vars_lines.append(f"  {var_name}: {var_type}")
+
+    # ── Assemble frontmatter ─────────────────────────────────────────────────
+    lines = ["---"]
+    lines.append(f"name: {name}")
+    if description:
+        lines.append(f"description: {description}")
+    lines.append(f"model: {model}")
+    lines.append(f"provider: {provider}")
+    lines.append(f"temperature: {temperature}")
+    lines.append(f"max_tokens: {max_tokens}")
+    if system:
+        lines.append(f"system: {system}")
+    if vars_lines:
+        lines.append("vars:")
+        lines.extend(vars_lines)
+    lines.append("---")
+    lines.append("")
+
+    # ── Body placeholder ─────────────────────────────────────────────────────
+    if vars_lines:
+        var_names = [v.strip().split(":")[0] for v in vars_lines]
+        body_placeholders = " ".join(f"{{{{{{{{ {v} }}}}}}}}".replace("{{ ", "{{").replace(" }}", "}}") for v in var_names)
+        lines.append(f"Write your prompt here. Available variables: {body_placeholders}")
+    else:
+        lines.append("Write your prompt here.")
+    lines.append("")
+
+    content = "\n".join(lines)
+
+    # ── Write or print ───────────────────────────────────────────────────────
+    if output:
+        dest = Path(output)
+        if dest.exists():
+            click.confirm(
+                click.style(f"\n  {dest} already exists. Overwrite?", fg="yellow"),
+                abort=True,
+            )
+        dest.write_text(content, encoding="utf-8")
+        click.echo()
+        _echo_success(f"✅ Created {dest}")
+        click.echo(click.style(f"   Run it with: prompt run {dest} --var ...", fg="bright_black"))
+    else:
+        click.echo()
+        click.echo(click.style("── Generated .prompt file ──", fg="cyan"))
+        click.echo(content)
 
 
 # ── Entry point ─────────────────────────────────────────────────────────────────
