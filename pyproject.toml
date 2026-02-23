@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "prompt-run"
+version = "0.1.0"
+description = "curl for prompts — run .prompt files against any LLM provider"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+keywords = ["llm", "prompt", "ai", "cli", "anthropic", "openai", "ollama"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+
+dependencies = [
+    "click>=8.1",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.25"]
+openai    = ["openai>=1.0"]
+all       = ["anthropic>=0.25", "openai>=1.0"]
+dev       = ["pytest>=8.0", "anthropic>=0.25", "openai>=1.0"]
+
+[project.scripts]
+prompt = "prompt_run.cli:cli"
+
+[project.urls]
+Homepage      = "https://github.com/Maneesh-Relanto/Prompt-Run"
+Issues        = "https://github.com/Maneesh-Relanto/Prompt-Run/issues"
+Changelog     = "https://github.com/Maneesh-Relanto/Prompt-Run/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["prompt_run*"]
+
+[tool.setuptools.package-data]
+prompt_run = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

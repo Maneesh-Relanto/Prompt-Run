@@ -1,0 +1,22 @@
+---
+name: classify
+description: Classifies text into one of the provided categories
+model: claude-sonnet-4-6
+provider: anthropic
+temperature: 0.0
+max_tokens: 64
+vars:
+  text: string
+  categories: string
+  allow_multiple: bool = false
+---
+
+Classify the following text into one of these categories: {{categories}}
+
+{% if allow_multiple %}
+You may return multiple categories if appropriate, as a comma-separated list.
+{% endif %}
+
+Return ONLY the category name(s). No explanation.
+
+Text: {{text}}

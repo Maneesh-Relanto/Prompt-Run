@@ -1,0 +1,19 @@
+---
+name: summarize
+description: Summarizes a piece of text into concise bullet points
+model: claude-sonnet-4-6
+provider: anthropic
+temperature: 0.3
+max_tokens: 512
+vars:
+  text: string
+  style: string = bullet points
+  max_bullets: int = 5
+---
+
+Summarize the following text as {{style}}.
+Use no more than {{max_bullets}} bullets.
+Be concise — each bullet should be one sentence.
+
+Text to summarize:
+{{text}}

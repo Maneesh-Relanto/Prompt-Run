@@ -1,0 +1,20 @@
+---
+name: translate
+description: Translates text from one language to another
+model: claude-sonnet-4-6
+provider: anthropic
+temperature: 0.2
+max_tokens: 1024
+vars:
+  text: string
+  target_lang: string
+  source_lang: string = auto-detect
+---
+
+Translate the following text to {{target_lang}}.
+Source language: {{source_lang}}.
+
+Only return the translated text — no explanations, no notes.
+
+Text:
+{{text}}

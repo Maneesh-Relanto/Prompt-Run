@@ -1,0 +1,21 @@
+---
+name: extract-json
+description: Extracts structured data from unstructured text and returns valid JSON
+model: claude-sonnet-4-6
+provider: anthropic
+temperature: 0.0
+max_tokens: 1024
+system: You are a data extraction assistant. Always respond with valid JSON only. No markdown, no explanation.
+vars:
+  text: string
+  schema: string
+---
+
+Extract data from the following text according to this JSON schema:
+
+{{schema}}
+
+Text to extract from:
+{{text}}
+
+Return only the JSON object. No explanation. No markdown code blocks.
