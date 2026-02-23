@@ -33,4 +33,6 @@ labels: bug
 - OS:
 - Python version: (`python --version`)
 - prompt-run version: (`prompt --version`)
-- Provider & model:
+- Provider & model: (e.g. `anthropic / claude-sonnet-4-6`)
+
+<!-- Add labels: provider: anthropic / provider: openai / provider: ollama + the relevant component: label -->

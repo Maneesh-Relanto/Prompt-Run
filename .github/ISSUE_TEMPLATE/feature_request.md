@@ -19,3 +19,5 @@ labels: enhancement
 
 ## Additional context
 <!-- Any other context, screenshots, or references. -->
+
+<!-- Add labels: provider: anthropic / provider: openai / provider: ollama + the relevant component: label -->

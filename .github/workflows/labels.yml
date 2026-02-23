@@ -1,0 +1,25 @@
+name: Sync Labels
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/labels.yml
+
+  workflow_dispatch: # allow manual trigger from the Actions tab
+
+jobs:
+  sync-labels:
+    name: Sync GitHub labels
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync labels from .github/labels.yml
+        uses: EndBug/add-and-update-labels@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: .github/labels.yml
