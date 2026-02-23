@@ -26,6 +26,20 @@ ENV/
 .env.*.local
 *.env
 
+# Private keys & certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+id_ecdsa
+id_ecdsa.*
+
 # Testing
 .pytest_cache/
 .coverage
