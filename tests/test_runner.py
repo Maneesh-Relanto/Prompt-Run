@@ -6,6 +6,7 @@ Provider calls are mocked; no real API keys needed.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -60,7 +61,7 @@ def _mock_provider(response: ProviderResponse = _MOCK_RESPONSE) -> MagicMock:
 
 
 def _config(**kwargs) -> RunConfig:
-    defaults = dict(vars={}, model="", provider="", temperature=None, max_tokens=None, system="", dry_run=False)
+    defaults: dict[str, Any] = {"vars": {}, "model": "", "provider": "", "temperature": None, "max_tokens": None, "system": "", "dry_run": False}
     defaults.update(kwargs)
     return RunConfig(**defaults)
 

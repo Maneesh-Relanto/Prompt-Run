@@ -46,6 +46,20 @@ def _coerce_value(value: Any, spec: VarSpec) -> Any:
         )
 
 
+def _find_missing_vars(
+    pf: PromptFile,
+    resolved: dict[str, Any],
+) -> list[str]:
+    """Return template variables that are required but absent from resolved."""
+    missing = []
+    for var_name in pf.template_vars:
+        if var_name not in resolved:
+            spec = pf.vars.get(var_name)
+            if (spec and spec.required) or var_name not in pf.vars:
+                missing.append(var_name)
+    return missing
+
+
 def resolve_vars(
     pf: PromptFile,
     runtime_vars: dict[str, Any],
@@ -72,15 +86,7 @@ def resolve_vars(
             resolved[name] = value
 
     # Check all template vars in body are accounted for
-    missing = []
-    for var_name in pf.template_vars:
-        if var_name not in resolved:
-            spec = pf.vars.get(var_name)
-            if spec and spec.required:
-                missing.append(var_name)
-            elif var_name not in pf.vars:
-                # Used in template but completely undeclared — must be runtime
-                missing.append(var_name)
+    missing = _find_missing_vars(pf, resolved)
 
     if missing:
         raise PromptRenderError(

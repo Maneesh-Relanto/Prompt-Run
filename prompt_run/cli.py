@@ -23,7 +23,7 @@ import click
 
 from prompt_run.parser import parse_prompt_file, validate_prompt_file, PromptParseError
 from prompt_run.renderer import render_prompt, PromptRenderError
-from prompt_run.runner import run_prompt_file, stream_run_prompt_file, RunConfig
+from prompt_run.runner import run_prompt_file, stream_run_prompt_file, RunConfig, RunResult
 from prompt_run.diff import run_diff, format_diff_plain
 from prompt_run.providers import ProviderError
 
@@ -75,6 +75,94 @@ def cli():
       prompt validate translate.prompt
       prompt inspect summarize.prompt --var text="Hi"
     """
+
+
+# ── prompt run helpers ─────────────────────────────────────────────────────────
+
+def _stream_run(
+    prompt_file: Path,
+    config: RunConfig,
+    show_prompt: bool,
+    runtime_vars: dict[str, Any],
+) -> None:
+    """Execute streaming run, printing chunks to stdout."""
+    if show_prompt:
+        from prompt_run.parser import parse_prompt_file as _pf
+        from prompt_run.renderer import render_prompt as _rp
+        _parsed = _pf(prompt_file)
+        _, _body = _rp(_parsed, runtime_vars)
+        click.echo(click.style("── Resolved prompt ──", fg="cyan"))
+        click.echo(_body)
+        click.echo(click.style("── Response ──", fg="cyan"))
+    try:
+        for chunk in stream_run_prompt_file(prompt_file, config):
+            click.echo(chunk, nl=False)
+        click.echo()
+    except (PromptParseError, PromptRenderError, ProviderError) as e:
+        _echo_error(str(e))
+        sys.exit(1)
+
+
+def _print_dry_run(result: RunResult) -> None:
+    """Print resolved prompt for dry-run mode."""
+    click.echo(click.style("── Dry run — resolved prompt ──", fg="cyan", bold=True))
+    if result.rendered_system:
+        click.echo(click.style("[system]", fg="blue"))
+        click.echo(result.rendered_system)
+        click.echo()
+    click.echo(click.style("[user]", fg="blue"))
+    click.echo(result.rendered_body)
+
+
+def _write_plain_response(result: RunResult, output_file: str) -> None:
+    """Write or print the plain-text response with token summary to stderr."""
+    if not result.response:
+        return
+    content = result.response.content
+    if output_file:
+        Path(output_file).write_text(content, encoding="utf-8")
+        _echo_success(f"\u2705 Response saved to {output_file}")
+    else:
+        click.echo(content)
+    click.echo(
+        click.style(
+            f"\n[{result.response.provider}/{result.response.model} \u00b7 "
+            f"{result.response.token_summary}]",
+            fg="bright_black",
+        ),
+        err=True,
+    )
+
+
+def _print_run_result(
+    result: RunResult,
+    output_json: bool,
+    show_prompt: bool,
+    output_file: str,
+) -> None:
+    """Print the run result as JSON or plain text."""
+    if show_prompt:
+        click.echo(click.style("── Resolved prompt ──", fg="cyan"))
+        click.echo(result.rendered_body)
+        click.echo(click.style("── Response ──", fg="cyan"))
+
+    if output_json:
+        out = {
+            "prompt": result.rendered_body,
+            "system": result.rendered_system,
+            "response": result.response.content if result.response else "",
+            "model": result.response.model if result.response else "",
+            "provider": result.response.provider if result.response else "",
+            "tokens": {
+                "input": result.response.input_tokens if result.response else 0,
+                "output": result.response.output_tokens if result.response else 0,
+                "total": result.response.total_tokens if result.response else 0,
+            },
+        }
+        click.echo(json.dumps(out, indent=2))
+        return
+
+    _write_plain_response(result, output_file)
 
 
 # ── prompt run ──────────────────────────────────────────────────────────────────
@@ -136,23 +224,8 @@ def cmd_run(
             stream=use_stream,
         )
 
-        # ── Streaming path (skip for dry-run / --json which need the full result)
         if use_stream and not dry_run and not output_json:
-            if show_prompt:
-                from prompt_run.parser import parse_prompt_file as _pf
-                from prompt_run.renderer import render_prompt as _rp
-                _parsed = _pf(prompt_file)
-                _, _body = _rp(_parsed, runtime_vars)
-                click.echo(click.style("── Resolved prompt ──", fg="cyan"))
-                click.echo(_body)
-                click.echo(click.style("── Response ──", fg="cyan"))
-            try:
-                for chunk in stream_run_prompt_file(prompt_file, config):
-                    click.echo(chunk, nl=False)
-                click.echo()  # final newline
-            except (PromptParseError, PromptRenderError, ProviderError) as e:
-                _echo_error(str(e))
-                sys.exit(1)
+            _stream_run(prompt_file, config, show_prompt, runtime_vars)
             return
 
         result = run_prompt_file(prompt_file, config)
@@ -167,57 +240,11 @@ def cmd_run(
         _echo_error(f"Provider error:\n{e}")
         sys.exit(1)
 
-    # ── Dry-run output
     if dry_run:
-        click.echo(click.style("── Dry run — resolved prompt ──", fg="cyan", bold=True))
-        if result.rendered_system:
-            click.echo(click.style("[system]", fg="blue"))
-            click.echo(result.rendered_system)
-            click.echo()
-        click.echo(click.style("[user]", fg="blue"))
-        click.echo(result.rendered_body)
+        _print_dry_run(result)
         return
 
-    # ── Show resolved prompt if requested
-    if show_prompt:
-        click.echo(click.style("── Resolved prompt ──", fg="cyan"))
-        click.echo(result.rendered_body)
-        click.echo(click.style("── Response ──", fg="cyan"))
-
-    # ── JSON output
-    if output_json:
-        out = {
-            "prompt": result.rendered_body,
-            "system": result.rendered_system,
-            "response": result.response.content if result.response else "",
-            "model": result.response.model if result.response else "",
-            "provider": result.response.provider if result.response else "",
-            "tokens": {
-                "input": result.response.input_tokens if result.response else 0,
-                "output": result.response.output_tokens if result.response else 0,
-                "total": result.response.total_tokens if result.response else 0,
-            },
-        }
-        click.echo(json.dumps(out, indent=2))
-        return
-
-    # ── Plain output
-    if result.response:
-        content = result.response.content
-        if output_file:
-            Path(output_file).write_text(content, encoding="utf-8")
-            _echo_success(f"✅ Response saved to {output_file}")
-        else:
-            click.echo(content)
-        # Token summary to stderr so it doesn't pollute pipe output
-        click.echo(
-            click.style(
-                f"\n[{result.response.provider}/{result.response.model} · "
-                f"{result.response.token_summary}]",
-                fg="bright_black",
-            ),
-            err=True,
-        )
+    _print_run_result(result, output_json, show_prompt, output_file)
 
 
 # ── prompt diff ─────────────────────────────────────────────────────────────────
@@ -316,6 +343,32 @@ def cmd_diff(
     click.echo(format_diff_plain(diff, width=term_width))
 
 
+# ── prompt validate helpers ────────────────────────────────────────────────────
+
+def _validate_single_file(path: Path) -> bool:
+    """Validate one prompt file; print results and return True if valid."""
+    try:
+        pf = parse_prompt_file(path)
+        result = validate_prompt_file(pf)
+    except PromptParseError as e:
+        _echo_error(f"{path}: {e}")
+        return False
+
+    if result.valid and not result.warnings:
+        _echo_success(f"✅ {path} — OK")
+    elif result.valid:
+        click.echo(click.style(f"⚠️  {path} — OK with warnings", fg="yellow"))
+        for w in result.warnings:
+            click.echo(f"   {w}")
+    else:
+        click.echo(click.style(f"❌ {path} — INVALID", fg="red"))
+        for e in result.errors:
+            click.echo(f"   Error: {e}")
+        for w in result.warnings:
+            click.echo(f"   Warning: {w}")
+    return result.valid
+
+
 # ── prompt validate ─────────────────────────────────────────────────────────────
 
 @cli.command("validate")
@@ -334,29 +387,30 @@ def cmd_validate(prompt_files: tuple[Path, ...]):
 
     all_valid = True
     for path in prompt_files:
-        try:
-            pf = parse_prompt_file(path)
-            result = validate_prompt_file(pf)
-        except PromptParseError as e:
-            _echo_error(f"{path}: {e}")
+        if not _validate_single_file(path):
             all_valid = False
-            continue
-
-        if result.valid and not result.warnings:
-            _echo_success(f"✅ {path} — OK")
-        elif result.valid:
-            click.echo(click.style(f"⚠️  {path} — OK with warnings", fg="yellow"))
-            for w in result.warnings:
-                click.echo(f"   {w}")
-        else:
-            all_valid = False
-            click.echo(click.style(f"❌ {path} — INVALID", fg="red"))
-            for e in result.errors:
-                click.echo(f"   Error: {e}")
-            for w in result.warnings:
-                click.echo(f"   Warning: {w}")
-
     sys.exit(0 if all_valid else 1)
+
+
+# ── prompt inspect helpers ──────────────────────────────────────────────────────
+
+def _print_inspect_body(pf: Any, runtime_vars: dict[str, Any]) -> None:
+    """Print the rendered or raw prompt body for the inspect command."""
+    if runtime_vars or all(not s.required for s in pf.vars.values()):
+        click.echo(click.style("\n── Resolved Prompt ──────────────────────────────", fg="cyan", bold=True))
+        try:
+            system, body = render_prompt(pf, runtime_vars)
+            if system:
+                click.echo(click.style("[system]", fg="blue"))
+                click.echo(system)
+                click.echo()
+            click.echo(click.style("[user]", fg="blue"))
+            click.echo(body)
+        except PromptRenderError as e:
+            _echo_warning(f"Cannot render — {e}")
+    else:
+        click.echo(click.style("\n── Raw Prompt Body ──────────────────────────────", fg="cyan", bold=True))
+        click.echo(pf.body)
 
 
 # ── prompt inspect ──────────────────────────────────────────────────────────────
@@ -389,29 +443,78 @@ def cmd_inspect(prompt_file: Path, vars_list: tuple[str, ...]):
     click.echo(f"  Max tokens  : {pf.max_tokens}")
 
     if pf.vars:
-        click.echo(f"\n  Variables:")
+        click.echo("\n  Variables:")
         for name, spec in pf.vars.items():
             default_str = f" = {spec.default!r}" if not spec.required else " (required)"
             click.echo(f"    {{{{ {name} }}}}  — {spec.type}{default_str}")
     else:
-        click.echo(f"  Variables   : none declared")
+        click.echo("  Variables   : none declared")
 
-    # Rendered prompt if vars provided
-    if runtime_vars or all(not s.required for s in pf.vars.values()):
-        click.echo(click.style("\n── Resolved Prompt ──────────────────────────────", fg="cyan", bold=True))
-        try:
-            system, body = render_prompt(pf, runtime_vars)
-            if system:
-                click.echo(click.style("[system]", fg="blue"))
-                click.echo(system)
-                click.echo()
-            click.echo(click.style("[user]", fg="blue"))
-            click.echo(body)
-        except PromptRenderError as e:
-            _echo_warning(f"Cannot render — {e}")
+    _print_inspect_body(pf, runtime_vars)
+
+
+# ── prompt new helpers ─────────────────────────────────────────────────────────
+
+def _collect_vars_interactively() -> list[str]:
+    """Interactively collect variable declarations; return list of YAML var lines."""
+    vars_lines: list[str] = []
+    click.echo()
+    click.echo(click.style("  Variables (Enter blank name to stop):", fg="bright_black"))
+    while True:
+        var_name = click.prompt("    Variable name", default="").strip()
+        if not var_name:
+            break
+        var_type = click.prompt(
+            f"    Type for '{var_name}'",
+            type=click.Choice(["string", "int", "float", "bool"], case_sensitive=False),
+            default="string",
+        )
+        var_default = click.prompt("    Default value (blank = required)", default="").strip()
+        if var_default:
+            vars_lines.append(f"  {var_name}: {var_type} = {var_default}")
+        else:
+            vars_lines.append(f"  {var_name}: {var_type}")
+    return vars_lines
+
+
+def _build_prompt_content(
+    name: str,
+    description: str,
+    model: str,
+    provider: str,
+    temperature: float,
+    max_tokens: int,
+    system: str,
+    vars_lines: list[str],
+) -> str:
+    """Assemble YAML frontmatter + body for a new .prompt file."""
+    lines = ["---", f"name: {name}"]
+    if description:
+        lines.append(f"description: {description}")
+    lines += [
+        f"model: {model}",
+        f"provider: {provider}",
+        f"temperature: {temperature}",
+        f"max_tokens: {max_tokens}",
+    ]
+    if system:
+        lines.append(f"system: {system}")
+    if vars_lines:
+        lines.append("vars:")
+        lines.extend(vars_lines)
+    lines.append("---")
+    lines.append("")
+    if vars_lines:
+        var_names = [v.strip().split(":")[0] for v in vars_lines]
+        body_placeholders = " ".join(
+            f"{{{{{{{{ {v} }}}}}}}}".replace("{{ ", "{{").replace(" }}", "}}")
+            for v in var_names
+        )
+        lines.append(f"Write your prompt here. Available variables: {body_placeholders}")
     else:
-        click.echo(click.style("\n── Raw Prompt Body ──────────────────────────────", fg="cyan", bold=True))
-        click.echo(pf.body)
+        lines.append("Write your prompt here.")
+    lines.append("")
+    return "\n".join(lines)
 
 
 # ── prompt new ─────────────────────────────────────────────────────────────────
@@ -462,52 +565,10 @@ def cmd_new(output: str, name: str, provider: str):
     max_tokens = click.prompt("  Max tokens", default=1024)
     system = click.prompt("  System prompt (optional)", default="")
 
-    # ── Variable declarations ────────────────────────────────────────────────
-    vars_lines: list[str] = []
-    click.echo()
-    click.echo(click.style("  Variables (Enter blank name to stop):", fg="bright_black"))
-    while True:
-        var_name = click.prompt("    Variable name", default="").strip()
-        if not var_name:
-            break
-        var_type = click.prompt(
-            f"    Type for '{var_name}'",
-            type=click.Choice(["string", "int", "float", "bool"], case_sensitive=False),
-            default="string",
-        )
-        var_default = click.prompt(f"    Default value (blank = required)", default="").strip()
-        if var_default:
-            vars_lines.append(f"  {var_name}: {var_type} = {var_default}")
-        else:
-            vars_lines.append(f"  {var_name}: {var_type}")
-
-    # ── Assemble frontmatter ─────────────────────────────────────────────────
-    lines = ["---"]
-    lines.append(f"name: {name}")
-    if description:
-        lines.append(f"description: {description}")
-    lines.append(f"model: {model}")
-    lines.append(f"provider: {provider}")
-    lines.append(f"temperature: {temperature}")
-    lines.append(f"max_tokens: {max_tokens}")
-    if system:
-        lines.append(f"system: {system}")
-    if vars_lines:
-        lines.append("vars:")
-        lines.extend(vars_lines)
-    lines.append("---")
-    lines.append("")
-
-    # ── Body placeholder ─────────────────────────────────────────────────────
-    if vars_lines:
-        var_names = [v.strip().split(":")[0] for v in vars_lines]
-        body_placeholders = " ".join(f"{{{{{{{{ {v} }}}}}}}}".replace("{{ ", "{{").replace(" }}", "}}") for v in var_names)
-        lines.append(f"Write your prompt here. Available variables: {body_placeholders}")
-    else:
-        lines.append("Write your prompt here.")
-    lines.append("")
-
-    content = "\n".join(lines)
+    vars_lines = _collect_vars_interactively()
+    content = _build_prompt_content(
+        name, description, model, provider, temperature, max_tokens, system, vars_lines
+    )
 
     # ── Write or print ───────────────────────────────────────────────────────
     if output:
