@@ -2,22 +2,53 @@
 
 **curl for prompts.** Run `.prompt` files against any LLM from the terminal.
 
-[![CI](https://github.com/Maneesh-Relanto/Prompt-Run/actions/workflows/ci.yml/badge.svg)](https://github.com/Maneesh-Relanto/Prompt-Run/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/prompt-run)](https://pypi.org/project/prompt-run/)
-[![Python](https://img.shields.io/pypi/pyversions/prompt-run)](https://pypi.org/project/prompt-run/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/Maneesh-Relanto/Prompt-Run/ci.yml?branch=main&style=flat-square&label=CI&color=16a34a&logo=github-actions&logoColor=white)](https://github.com/Maneesh-Relanto/Prompt-Run/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/prompt-run?style=flat-square&color=0284c7&logo=pypi&logoColor=white)](https://pypi.org/project/prompt-run/)
+[![Python](https://img.shields.io/pypi/pyversions/prompt-run?style=flat-square&color=7c3aed&logo=python&logoColor=white)](https://pypi.org/project/prompt-run/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b?style=flat-square)](LICENSE)
 
-[![Anthropic](https://img.shields.io/badge/Anthropic-Claude-cc785c?logo=anthropic&logoColor=white)](https://www.anthropic.com)
-[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-412991?logo=openai&logoColor=white)](https://platform.openai.com)
-[![Ollama](https://img.shields.io/badge/Ollama-local-3d8bcd?logo=ollama&logoColor=white)](https://ollama.com)
+[![Anthropic](https://img.shields.io/badge/Anthropic-Claude-b45309?style=flat-square&logo=anthropic&logoColor=white)](https://www.anthropic.com)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-6d28d9?style=flat-square&logo=openai&logoColor=white)](https://platform.openai.com)
+[![Ollama](https://img.shields.io/badge/Ollama-local-0f766e?style=flat-square&logo=ollama&logoColor=white)](https://ollama.com)
 
 Prompts are code. Treat them like it.
 
+---
+
+## Quick start
+
+**1. Install**
 ```bash
-prompt run summarize.prompt --var text="$(cat article.txt)"
-prompt diff v1.prompt v2.prompt --var text="same input"
-prompt validate prompts/*.prompt
+pip install "prompt-run[anthropic]"
+export ANTHROPIC_API_KEY="sk-ant-..."
 ```
+
+**2. Run an example prompt from this repo**
+```bash
+prompt run examples/summarize.prompt --var text="LLMs are changing how developers build software."
+```
+
+**3. Try streaming, dry-run, and diff**
+```bash
+# Stream tokens as they arrive
+prompt run examples/summarize.prompt --var text="Your text here" --stream
+
+# Preview the resolved prompt without calling the LLM
+prompt run examples/summarize.prompt --var text="Your text here" --dry-run
+
+# Compare two inputs side by side
+prompt diff examples/summarize.prompt \
+  --a-var text="First article content..." \
+  --b-var text="Second article content..."
+```
+
+**4. Write your own**
+```bash
+prompt new my-prompt.prompt       # interactive wizard
+prompt run my-prompt.prompt --var input="hello"
+```
+
+That's it. No config files, no accounts, no platform.
 
 ---
 
@@ -31,6 +62,24 @@ Every team building with LLMs ends up with the same mess — prompts buried in P
 - ✅ Reviewed in PRs like any other file
 - ✅ Swappable across models and providers without touching application code
 - ✅ Runnable from the terminal or CI with one command
+
+---
+
+## Why not LangChain / promptfoo / Langfuse?
+
+| | **prompt-run** | LangChain | promptfoo | Langfuse |
+|---|---|---|---|---|
+| Prompt format | Plain `.prompt` file | Python code | YAML config | Web UI |
+| Works in terminal | ✅ | ❌ | ✅ | ❌ |
+| Works as Python library | ✅ | ✅ | ❌ | ❌ |
+| No framework lock-in | ✅ | ❌ | ✅ | ❌ |
+| Diff two prompt outputs | ✅ | ❌ | ❌ | ❌ |
+| Pipe stdin / shell-friendly | ✅ | ❌ | ❌ | ❌ |
+| Works offline (Ollama) | ✅ | ✅ | ✅ | ❌ |
+| Zero config beyond API key | ✅ | ❌ | ❌ | ❌ |
+| Prompt lives in git | ✅ | Partial | ✅ | ❌ |
+
+prompt-run is a **single-purpose tool** — it does one thing well and stays out of your stack. No agents, no chains, no platform.
 
 ---
 
@@ -207,13 +256,16 @@ prompt validate summarize.prompt
 prompt validate prompts/*.prompt   # glob support
 ```
 
-Checks:
+Checks (these are **errors** — validation fails):
 - Valid YAML frontmatter
-- Known provider name
-- Temperature in valid range
+- Known provider name (`anthropic`, `openai`, `ollama`)
+- Temperature in range `0.0–2.0`
 - Body is not empty
-- Variables used in body are declared
-- Declared variables are actually used
+- `max_tokens` is at least 1
+
+Checks (these are **warnings** — validation passes with a note):
+- Variables used in body but not declared in frontmatter
+- Variables declared in frontmatter but never used in body
 
 ---
 
