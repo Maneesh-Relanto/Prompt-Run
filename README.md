@@ -93,7 +93,7 @@ Every team building with LLMs ends up with the same mess — prompts buried in P
 | Works in terminal | ✅ | ❌ | ✅ | ❌ |
 | Works as Python library | ✅ | ✅ | ❌ | ✅ |
 | No framework lock-in | ✅ | ❌ | ✅ | ❌ |
-| Diff two prompt outputs | ✅ | ❌ | ✅ | ❌ |
+| Diff two prompt outputs | ✅ | ❌ | Partial (web UI) | ❌ |
 | Pipe stdin / shell-friendly | ✅ | ❌ | ❌ | ❌ |
 | Works offline (Ollama) | ✅ | ✅ | ✅ | ❌ |
 | Zero config beyond API key | ✅ | ❌ | ❌ | ❌ |
