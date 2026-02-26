@@ -359,6 +359,19 @@ The `examples/` folder contains ready-to-run `.prompt` files:
 
 ---
 
+## Privacy & Security
+
+prompt-run runs **entirely on your machine**. It is a local CLI tool with no backend, no telemetry, and no cloud component of its own.
+
+- **Your API keys are never stored or logged.** They are read from environment variables and passed directly to the provider (Anthropic, OpenAI, etc.) in the HTTP request — exactly as if you called their SDK yourself. prompt-run does not write keys to disk or transmit them anywhere else.
+- **Your prompts and outputs stay local.** prompt-run does not send your `.prompt` files, variables, or LLM responses to any server other than the AI provider you explicitly choose.
+- **No telemetry or analytics.** prompt-run collects zero usage data. There are no background calls, no crash reports, and no tracking of any kind.
+- **No accounts required.** There is no prompt-run account, login, or sign-up. The only credentials involved are your own provider API keys.
+
+When you run `prompt run`, the only network traffic is the request you intentionally send to your chosen AI provider.
+
+---
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
