@@ -62,25 +62,27 @@ def stream_run_prompt_file(path: Path | str, config: RunConfig) -> Iterator[str]
     yield from _stream(pf, config)
 
 
+def _resolve_runtime_vars(config: RunConfig, pf: PromptFile) -> dict[str, Any]:
+    """Merge config.vars with piped stdin, auto-detecting the target variable."""
+    runtime_vars = dict(config.vars)
+    piped = read_stdin_if_piped()
+    if not piped:
+        return runtime_vars
+    if config.stdin_var:
+        runtime_vars[config.stdin_var] = piped
+    else:
+        required_vars = [
+            name for name, spec in pf.vars.items()
+            if spec.required and name not in runtime_vars
+        ]
+        if len(required_vars) == 1:
+            runtime_vars[required_vars[0]] = piped
+    return runtime_vars
+
+
 def _run(pf: PromptFile, config: RunConfig) -> RunResult:
     """Internal: render + call provider."""
-    # Handle stdin piping
-    runtime_vars = dict(config.vars)
-    if config.stdin_var:
-        piped = read_stdin_if_piped()
-        if piped:
-            runtime_vars[config.stdin_var] = piped
-
-    # Auto-detect stdin if only one required var and stdin is piped
-    if not config.stdin_var:
-        piped = read_stdin_if_piped()
-        if piped:
-            required_vars = [
-                name for name, spec in pf.vars.items()
-                if spec.required and name not in runtime_vars
-            ]
-            if len(required_vars) == 1:
-                runtime_vars[required_vars[0]] = piped
+    runtime_vars = _resolve_runtime_vars(config, pf)
 
     # Render body and system
     rendered_system, rendered_body = render_prompt(pf, runtime_vars)
@@ -126,22 +128,7 @@ def _run(pf: PromptFile, config: RunConfig) -> RunResult:
 
 def _stream(pf: PromptFile, config: RunConfig) -> Iterator[str]:
     """Internal: render variables then stream tokens from the provider."""
-    runtime_vars = dict(config.vars)
-    if config.stdin_var:
-        piped = read_stdin_if_piped()
-        if piped:
-            runtime_vars[config.stdin_var] = piped
-
-    if not config.stdin_var:
-        piped = read_stdin_if_piped()
-        if piped:
-            required_vars = [
-                name for name, spec in pf.vars.items()
-                if spec.required and name not in runtime_vars
-            ]
-            if len(required_vars) == 1:
-                runtime_vars[required_vars[0]] = piped
-
+    runtime_vars = _resolve_runtime_vars(config, pf)
     rendered_system, rendered_body = render_prompt(pf, runtime_vars)
     if config.system:
         rendered_system = config.system

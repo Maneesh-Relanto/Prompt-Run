@@ -28,7 +28,7 @@ def test_parse_basic():
     assert pf.name == "test"
     assert pf.provider == "anthropic"
     assert pf.model == "claude-sonnet-4-6"
-    assert pf.temperature == 0.5
+    assert pf.temperature == pytest.approx(0.5)
     assert pf.max_tokens == 256
 
 def test_parse_vars():

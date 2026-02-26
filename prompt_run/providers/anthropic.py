@@ -53,12 +53,12 @@ class AnthropicProvider(BaseProvider):
     ) -> ProviderResponse:
         model = model or DEFAULT_MODEL
 
-        kwargs = dict(
-            model=model,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        kwargs: dict = {
+            "model": model,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "messages": [{"role": "user", "content": prompt}],
+        }
         if system:
             kwargs["system"] = system
 
@@ -100,12 +100,12 @@ class AnthropicProvider(BaseProvider):
     ) -> Iterator[str]:
         model = model or DEFAULT_MODEL
 
-        kwargs: dict = dict(
-            model=model,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        kwargs: dict = {
+            "model": model,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "messages": [{"role": "user", "content": prompt}],
+        }
         if system:
             kwargs["system"] = system
 

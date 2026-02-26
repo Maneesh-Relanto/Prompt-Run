@@ -75,7 +75,9 @@ def format_diff_plain(diff: DiffResult, width: int = 100) -> str:
     Format diff results as a side-by-side plain-text table.
     Falls back to stacked view if terminal is narrow.
     """
-    col_w = (width - 7) // 2  # 7 = borders + padding
+    # 7 accounts for: left border (1) + space (1) + center divider (1) + space (1) + right border (1) + 2 padding spaces
+    border_overhead = 7
+    col_w = (width - border_overhead) // 2
 
     def _wrap(text: str) -> list[str]:
         lines = []
@@ -96,9 +98,7 @@ def format_diff_plain(diff: DiffResult, width: int = 100) -> str:
     lines_a += [""] * (max_lines - len(lines_a))
     lines_b += [""] * (max_lines - len(lines_b))
 
-    separator = "─" * col_w
     header = f"┌─ {diff.label_a:<{col_w - 3}}┬─ {diff.label_b:<{col_w - 3}}┐"
-    div = f"├{'─' * (col_w + 1)}┼{'─' * (col_w + 1)}┤"
     footer = f"└{'─' * (col_w + 1)}┴{'─' * (col_w + 1)}┘"
 
     rows = [header]
