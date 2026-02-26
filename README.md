@@ -11,7 +11,27 @@
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-6d28d9?style=flat-square&logo=openai&logoColor=white)](https://platform.openai.com)
 [![Ollama](https://img.shields.io/badge/Ollama-local-0f766e?style=flat-square&logo=ollama&logoColor=white)](https://ollama.com)
 
+[![No Telemetry](https://img.shields.io/badge/telemetry-none-22c55e?style=flat-square&logo=checkmarx&logoColor=white)](#privacy--security)
+[![No Data Stored](https://img.shields.io/badge/data%20stored-none-22c55e?style=flat-square&logo=checkmarx&logoColor=white)](#privacy--security)
+[![Runs 100% Local](https://img.shields.io/badge/runs-100%25%20local-0ea5e9?style=flat-square&logo=homeassistant&logoColor=white)](#privacy--security)
+[![No Account Required](https://img.shields.io/badge/account-not%20required-0ea5e9?style=flat-square&logo=checkmarx&logoColor=white)](#privacy--security)
+
 Prompts are code. Treat them like it.
+
+---
+
+## 🔒 Privacy & Security
+
+> **prompt-run runs entirely on your machine.** It is a local CLI tool with no backend, no telemetry, and no cloud component of its own.
+
+| | |
+|---|---|
+| **API keys** | Read from environment variables, passed directly to your chosen provider. Never stored, logged, or sent anywhere else. |
+| **Prompts & outputs** | Stay on your machine. The only server that sees them is the AI provider you explicitly call. |
+| **Telemetry** | None. Zero usage data, no crash reports, no background calls, no tracking of any kind. |
+| **Accounts** | Not required. There is no prompt-run account or sign-up. |
+
+When you run `prompt run`, the only network traffic is the request you intentionally send to your chosen AI provider.
 
 ---
 
@@ -69,15 +89,15 @@ Every team building with LLMs ends up with the same mess — prompts buried in P
 
 | | **prompt-run** | LangChain | promptfoo | Langfuse |
 |---|---|---|---|---|
-| Prompt format | Plain `.prompt` file | Python code | YAML config | Web UI |
+| Prompt format | Plain `.prompt` file | Python code | YAML config | Web UI / SDK |
 | Works in terminal | ✅ | ❌ | ✅ | ❌ |
-| Works as Python library | ✅ | ✅ | ❌ | ❌ |
+| Works as Python library | ✅ | ✅ | ❌ | ✅ |
 | No framework lock-in | ✅ | ❌ | ✅ | ❌ |
-| Diff two prompt outputs | ✅ | ❌ | ❌ | ❌ |
+| Diff two prompt outputs | ✅ | ❌ | ✅ | ❌ |
 | Pipe stdin / shell-friendly | ✅ | ❌ | ❌ | ❌ |
 | Works offline (Ollama) | ✅ | ✅ | ✅ | ❌ |
 | Zero config beyond API key | ✅ | ❌ | ❌ | ❌ |
-| Prompt lives in git | ✅ | Partial | ✅ | ❌ |
+| Prompt lives in git | ✅ | Partial | ✅ | Partial |
 
 prompt-run is a **single-purpose tool** — it does one thing well and stays out of your stack. No agents, no chains, no platform.
 
@@ -356,19 +376,6 @@ The `examples/` folder contains ready-to-run `.prompt` files:
 | [translate.prompt](examples/translate.prompt) | Translate text to any language |
 | [classify.prompt](examples/classify.prompt) | Classify text into categories |
 | [extract-json.prompt](examples/extract-json.prompt) | Extract structured JSON from text |
-
----
-
-## Privacy & Security
-
-prompt-run runs **entirely on your machine**. It is a local CLI tool with no backend, no telemetry, and no cloud component of its own.
-
-- **Your API keys are never stored or logged.** They are read from environment variables and passed directly to the provider (Anthropic, OpenAI, etc.) in the HTTP request — exactly as if you called their SDK yourself. prompt-run does not write keys to disk or transmit them anywhere else.
-- **Your prompts and outputs stay local.** prompt-run does not send your `.prompt` files, variables, or LLM responses to any server other than the AI provider you explicitly choose.
-- **No telemetry or analytics.** prompt-run collects zero usage data. There are no background calls, no crash reports, and no tracking of any kind.
-- **No accounts required.** There is no prompt-run account, login, or sign-up. The only credentials involved are your own provider API keys.
-
-When you run `prompt run`, the only network traffic is the request you intentionally send to your chosen AI provider.
 
 ---
 
