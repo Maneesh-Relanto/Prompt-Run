@@ -101,3 +101,54 @@ def test_var_type_int():
     pf = parse_prompt_string(raw)
     assert pf.vars["count"].type == "int"
     assert pf.vars["count"].default == 5
+
+def test_var_spec_dict_form():
+    """Vars declared as a YAML dict with type/default keys."""
+    raw = "---\nvars:\n  text:\n    type: string\n    default: hello\n---\n{{text}}"
+    pf = parse_prompt_string(raw)
+    assert pf.vars["text"].type == "string"
+    assert pf.vars["text"].default == "hello"
+    assert pf.vars["text"].required is False
+
+def test_var_spec_dict_form_required():
+    """Dict-form var with no default is required."""
+    raw = "---\nvars:\n  text:\n    type: string\n---\n{{text}}"
+    pf = parse_prompt_string(raw)
+    assert pf.vars["text"].required is True
+
+def test_var_bare_value():
+    """Bare value var like `count: 3` sets type from Python type and is optional."""
+    raw = "---\nvars:\n  count: 3\n---\n{{count}} items"
+    pf = parse_prompt_string(raw)
+    assert pf.vars["count"].required is False
+    assert pf.vars["count"].default == 3
+
+def test_parse_no_source_path_empty_name():
+    """When parsed from string with no source_path and no name in frontmatter."""
+    raw = "---\nprovider: anthropic\n---\nHello"
+    pf = parse_prompt_string(raw, source_path=None)
+    assert pf.name == ""
+
+def test_validate_max_tokens_zero():
+    pf = parse_prompt_string("---\nprovider: anthropic\nmax_tokens: 0\n---\nHello")
+    result = validate_prompt_file(pf)
+    assert not result.valid
+    assert any("max_tokens" in e for e in result.errors)
+
+def test_validate_temperature_out_of_range():
+    pf = parse_prompt_string("---\nprovider: anthropic\ntemperature: 3.5\n---\nHello")
+    result = validate_prompt_file(pf)
+    assert not result.valid
+    assert any("temperature" in e for e in result.errors)
+
+def test_var_type_float():
+    raw = "---\nvars:\n  ratio: float = 0.5\n---\n{{ratio}}"
+    pf = parse_prompt_string(raw)
+    assert pf.vars["ratio"].type == "float"
+    assert pf.vars["ratio"].default == pytest.approx(0.5)
+
+def test_var_type_bool():
+    raw = "---\nvars:\n  flag: bool = true\n---\n{{flag}}"
+    pf = parse_prompt_string(raw)
+    assert pf.vars["flag"].type == "bool"
+    assert pf.vars["flag"].default is True
