@@ -234,6 +234,60 @@ class TestCmdInspect:
         assert result.exit_code == 1
 
 
+class TestCmdRunOverrides:
+    """Verify each CLI override flag is forwarded correctly into RunConfig."""
+
+    def _invoke_with_mock(self, tmp_path: Path, extra_args: list[str]):
+        """Helper: invoke `prompt run` with extra_args, return (result, RunConfig)."""
+        p = _make_prompt(tmp_path)
+        with patch("prompt_run.cli.run_prompt_file") as mock_run:
+            from prompt_run.runner import RunResult
+            from prompt_run.parser import parse_prompt_string
+            pf = parse_prompt_string("---\nprovider: anthropic\n---\nHello")
+            mock_run.return_value = RunResult(
+                prompt_file=pf,
+                rendered_system="",
+                rendered_body="Hello",
+                response=_MOCK_RESPONSE,
+                dry_run=False,
+            )
+            result = RUNNER.invoke(
+                cli, ["run", str(p), "--var", "text=hi"] + extra_args
+            )
+            config = mock_run.call_args[0][1]  # second positional arg is RunConfig
+        return result, config
+
+    def test_model_override(self, tmp_path: Path):
+        result, config = self._invoke_with_mock(tmp_path, ["--model", "gpt-4o"])
+        assert result.exit_code == 0
+        assert config.model == "gpt-4o"
+
+    def test_provider_override(self, tmp_path: Path):
+        result, config = self._invoke_with_mock(tmp_path, ["--provider", "openai"])
+        assert result.exit_code == 0
+        assert config.provider == "openai"
+
+    def test_temperature_override(self, tmp_path: Path):
+        result, config = self._invoke_with_mock(tmp_path, ["--temperature", "0.2"])
+        assert result.exit_code == 0
+        assert config.temperature == pytest.approx(0.2)
+
+    def test_max_tokens_override(self, tmp_path: Path):
+        result, config = self._invoke_with_mock(tmp_path, ["--max-tokens", "512"])
+        assert result.exit_code == 0
+        assert config.max_tokens == 512
+
+    def test_system_override(self, tmp_path: Path):
+        result, config = self._invoke_with_mock(tmp_path, ["--system", "Be concise."])
+        assert result.exit_code == 0
+        assert config.system == "Be concise."
+
+    def test_stdin_var_override(self, tmp_path: Path):
+        result, config = self._invoke_with_mock(tmp_path, ["--stdin-var", "text"])
+        assert result.exit_code == 0
+        assert config.stdin_var == "text"
+
+
 class TestCmdDiff:
     def test_diff_dry_run(self, tmp_path: Path):
         p = _make_prompt(tmp_path)
