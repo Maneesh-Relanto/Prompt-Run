@@ -43,6 +43,7 @@ id_ecdsa.*
 # Testing
 .pytest_cache/
 .coverage
+coverage.json
 htmlcov/
 .tox/
 coverage.xml
