@@ -35,10 +35,11 @@ import yaml
 
 # ── Data models ────────────────────────────────────────────────────────────────
 
+
 @dataclass
 class VarSpec:
     name: str
-    type: str = "string"          # string | int | float | bool
+    type: str = "string"  # string | int | float | bool
     default: Any = None
     required: bool = True
 
@@ -49,13 +50,13 @@ class PromptFile:
     name: str = ""
     description: str = ""
     # Provider config
-    provider: str = "anthropic"   # anthropic | openai | ollama
+    provider: str = "anthropic"  # anthropic | openai | ollama
     model: str = ""
     temperature: float = 0.7
     max_tokens: int = 1024
     # Prompts
     system: str = ""
-    body: str = ""                # raw body with {{placeholders}}
+    body: str = ""  # raw body with {{placeholders}}
     # Variables
     vars: dict[str, VarSpec] = field(default_factory=dict)
     # Source
@@ -64,13 +65,14 @@ class PromptFile:
     @property
     def template_vars(self) -> set[str]:
         """Return all {{var}} names found in body and system."""
-        pattern = re.compile(r'\{\{\s*(\w+)\s*\}\}')
+        pattern = re.compile(r"\{\{\s*(\w+)\s*\}\}")
         found = set(pattern.findall(self.body))
         found |= set(pattern.findall(self.system))
         return found
 
 
 # ── Parsing ────────────────────────────────────────────────────────────────────
+
 
 class PromptParseError(Exception):
     pass
@@ -157,7 +159,7 @@ def parse_prompt_string(raw: str, source_path: Path | None = None) -> PromptFile
                 "Make sure your frontmatter is wrapped with `---` on both sides."
             )
         frontmatter_raw = rest[:close].strip()
-        body = rest[close + 4:].strip()  # skip past \n---
+        body = rest[close + 4 :].strip()  # skip past \n---
     else:
         # No frontmatter — just a bare prompt body
         frontmatter_raw = ""
@@ -165,7 +167,7 @@ def parse_prompt_string(raw: str, source_path: Path | None = None) -> PromptFile
 
     # Parse YAML frontmatter
     try:
-        meta: dict = yaml.safe_load(frontmatter_raw) or {}
+        meta: dict[str, Any] = yaml.safe_load(frontmatter_raw) or {}
     except yaml.YAMLError as e:
         raise PromptParseError(f"Invalid YAML in frontmatter:\n{e}") from e
 
@@ -173,7 +175,7 @@ def parse_prompt_string(raw: str, source_path: Path | None = None) -> PromptFile
         raise PromptParseError("Frontmatter must be a YAML mapping (key: value pairs).")
 
     # Parse vars block
-    vars_raw: dict = meta.get("vars", {}) or {}
+    vars_raw: dict[str, Any] = meta.get("vars", {}) or {}
     vars_parsed: dict[str, VarSpec] = {}
     for var_name, var_val in vars_raw.items():
         vars_parsed[var_name] = _parse_var_spec(var_name, var_val)
@@ -203,6 +205,7 @@ def parse_prompt_string(raw: str, source_path: Path | None = None) -> PromptFile
 
 # ── Validation ─────────────────────────────────────────────────────────────────
 
+
 @dataclass
 class ValidationResult:
     valid: bool
@@ -224,8 +227,7 @@ def validate_prompt_file(pf: PromptFile) -> ValidationResult:
     # Provider check
     if pf.provider not in KNOWN_PROVIDERS:
         errors.append(
-            f"Unknown provider `{pf.provider}`. "
-            f"Supported: {', '.join(sorted(KNOWN_PROVIDERS))}"
+            f"Unknown provider `{pf.provider}`. Supported: {', '.join(sorted(KNOWN_PROVIDERS))}"
         )
 
     # Temperature range

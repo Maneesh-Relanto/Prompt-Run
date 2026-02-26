@@ -23,7 +23,7 @@ DEFAULT_BASE_URL = "http://localhost:11434"
 class OllamaProvider(BaseProvider):
     name = "ollama"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._base_url = os.environ.get("OLLAMA_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
 
     def default_model(self) -> str:
@@ -44,15 +44,17 @@ class OllamaProvider(BaseProvider):
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
 
-        payload = json.dumps({
-            "model": model,
-            "messages": messages,
-            "stream": False,
-            "options": {
-                "temperature": temperature,
-                "num_predict": max_tokens,
-            },
-        }).encode("utf-8")
+        payload = json.dumps(
+            {
+                "model": model,
+                "messages": messages,
+                "stream": False,
+                "options": {
+                    "temperature": temperature,
+                    "num_predict": max_tokens,
+                },
+            }
+        ).encode("utf-8")
 
         url = f"{self._base_url}/api/chat"
         req = urllib.request.Request(

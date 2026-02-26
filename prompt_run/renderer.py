@@ -17,14 +17,14 @@ import re
 import sys
 from typing import Any
 
-from .parser import PromptFile, VarSpec, PromptParseError
+from .parser import PromptFile, VarSpec
 
 
 class PromptRenderError(Exception):
     pass
 
 
-PLACEHOLDER_RE = re.compile(r'\{\{\s*(\w+)\s*\}\}')
+PLACEHOLDER_RE = re.compile(r"\{\{\s*(\w+)\s*\}\}")
 
 
 def _coerce_value(value: Any, spec: VarSpec) -> Any:
@@ -78,9 +78,9 @@ def resolve_vars(
 
     # Override with runtime values (with type coercion)
     for name, value in runtime_vars.items():
-        spec = pf.vars.get(name)
-        if spec:
-            resolved[name] = _coerce_value(value, spec)
+        spec_opt = pf.vars.get(name)
+        if spec_opt:
+            resolved[name] = _coerce_value(value, spec_opt)
         else:
             # Undeclared var — pass through as string
             resolved[name] = value
@@ -91,8 +91,7 @@ def resolve_vars(
     if missing:
         raise PromptRenderError(
             f"Missing required variable(s): {', '.join(sorted(missing))}.\n"
-            f"Pass them with: " +
-            " ".join(f"--var {m}=\"...\"" for m in sorted(missing))
+            f"Pass them with: " + " ".join(f'--var {m}="..."' for m in sorted(missing))
         )
 
     return resolved
@@ -104,11 +103,12 @@ def render_template(template: str, variables: dict[str, Any]) -> str:
     Unresolved placeholders that remain after substitution are left as-is
     (they were already caught in resolve_vars).
     """
-    def replacer(match: re.Match) -> str:
+
+    def replacer(match: re.Match[str]) -> str:
         var_name = match.group(1)
         if var_name in variables:
             return str(variables[var_name])
-        return match.group(0)  # leave unresolved placeholder as-is
+        return str(match.group(0))  # leave unresolved placeholder as-is
 
     return PLACEHOLDER_RE.sub(replacer, template)
 

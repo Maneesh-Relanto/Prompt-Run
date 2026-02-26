@@ -13,7 +13,6 @@ Commands:
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import sys
 from pathlib import Path
@@ -30,6 +29,7 @@ from prompt_run.providers import ProviderError
 
 # ── Shared helpers ──────────────────────────────────────────────────────────────
 
+
 def _parse_vars(var_list: tuple[str, ...]) -> dict[str, Any]:
     """Parse KEY=VALUE pairs from --var flags."""
     result = {}
@@ -44,23 +44,24 @@ def _parse_vars(var_list: tuple[str, ...]) -> dict[str, Any]:
     return result
 
 
-def _echo_error(msg: str):
+def _echo_error(msg: str) -> None:
     click.echo(click.style(f"\n❌ {msg}", fg="red"), err=True)
 
 
-def _echo_warning(msg: str):
+def _echo_warning(msg: str) -> None:
     click.echo(click.style(f"⚠️  {msg}", fg="yellow"), err=True)
 
 
-def _echo_success(msg: str):
+def _echo_success(msg: str) -> None:
     click.echo(click.style(msg, fg="green"))
 
 
 # ── CLI root ────────────────────────────────────────────────────────────────────
 
+
 @click.group()
 @click.version_option(package_name="prompt-run")
-def cli():
+def cli() -> None:
     """
     \b
     prompt-run — treat prompts as first-class files.
@@ -79,6 +80,7 @@ def cli():
 
 # ── prompt run helpers ─────────────────────────────────────────────────────────
 
+
 def _stream_run(
     prompt_file: Path,
     config: RunConfig,
@@ -89,6 +91,7 @@ def _stream_run(
     if show_prompt:
         from prompt_run.parser import parse_prompt_file as _pf
         from prompt_run.renderer import render_prompt as _rp
+
         _parsed = _pf(prompt_file)
         _, _body = _rp(_parsed, runtime_vars)
         click.echo(click.style("── Resolved prompt ──", fg="cyan"))
@@ -167,10 +170,16 @@ def _print_run_result(
 
 # ── prompt run ──────────────────────────────────────────────────────────────────
 
+
 @cli.command("run")
 @click.argument("prompt_file", type=click.Path(exists=True, path_type=Path))
-@click.option("--var", "vars_list", multiple=True, metavar="KEY=VALUE",
-              help="Variable to inject. Repeatable. e.g. --var text='hello'")
+@click.option(
+    "--var",
+    "vars_list",
+    multiple=True,
+    metavar="KEY=VALUE",
+    help="Variable to inject. Repeatable. e.g. --var text='hello'",
+)
 @click.option("--model", default="", help="Override model from file")
 @click.option("--provider", default="", help="Override provider (anthropic|openai|ollama)")
 @click.option("--temperature", type=float, default=None, help="Override temperature (0.0–2.0)")
@@ -180,10 +189,19 @@ def _print_run_result(
 @click.option("--json", "output_json", is_flag=True, help="Output as JSON with metadata")
 @click.option("--show-prompt", is_flag=True, help="Print the rendered prompt before the response")
 @click.option("--stream", "use_stream", is_flag=True, help="Stream tokens to stdout as they arrive")
-@click.option("--stdin-var", default="", metavar="VAR",
-              help="Pipe stdin into this variable name instead of auto-detecting")
-@click.option("--output", "output_file", default="", metavar="FILE",
-              help="Write response to FILE instead of stdout")
+@click.option(
+    "--stdin-var",
+    default="",
+    metavar="VAR",
+    help="Pipe stdin into this variable name instead of auto-detecting",
+)
+@click.option(
+    "--output",
+    "output_file",
+    default="",
+    metavar="FILE",
+    help="Write response to FILE instead of stdout",
+)
 def cmd_run(
     prompt_file: Path,
     vars_list: tuple[str, ...],
@@ -198,7 +216,7 @@ def cmd_run(
     use_stream: bool,
     stdin_var: str,
     output_file: str,
-):
+) -> None:
     """Run a .prompt file against an LLM provider.
 
     \b
@@ -249,15 +267,19 @@ def cmd_run(
 
 # ── prompt diff ─────────────────────────────────────────────────────────────────
 
+
 @cli.command("diff")
 @click.argument("prompt_a", type=click.Path(exists=True, path_type=Path))
 @click.argument("prompt_b", type=click.Path(exists=True, path_type=Path), required=False)
-@click.option("--var", "vars_list", multiple=True, metavar="KEY=VALUE",
-              help="Shared variable for both sides")
-@click.option("--a-var", "a_vars_list", multiple=True, metavar="KEY=VALUE",
-              help="Variable for side A only")
-@click.option("--b-var", "b_vars_list", multiple=True, metavar="KEY=VALUE",
-              help="Variable for side B only")
+@click.option(
+    "--var", "vars_list", multiple=True, metavar="KEY=VALUE", help="Shared variable for both sides"
+)
+@click.option(
+    "--a-var", "a_vars_list", multiple=True, metavar="KEY=VALUE", help="Variable for side A only"
+)
+@click.option(
+    "--b-var", "b_vars_list", multiple=True, metavar="KEY=VALUE", help="Variable for side B only"
+)
 @click.option("--model", default="", help="Override model")
 @click.option("--provider", default="", help="Override provider")
 @click.option("--temperature", type=float, default=None)
@@ -276,7 +298,7 @@ def cmd_diff(
     max_tokens: int | None,
     dry_run: bool,
     output_json: bool,
-):
+) -> None:
     """Compare two prompt outputs side by side.
 
     \b
@@ -345,6 +367,7 @@ def cmd_diff(
 
 # ── prompt validate helpers ────────────────────────────────────────────────────
 
+
 def _validate_single_file(path: Path) -> bool:
     """Validate one prompt file; print results and return True if valid."""
     try:
@@ -362,8 +385,8 @@ def _validate_single_file(path: Path) -> bool:
             click.echo(f"   {w}")
     else:
         click.echo(click.style(f"❌ {path} — INVALID", fg="red"))
-        for e in result.errors:
-            click.echo(f"   Error: {e}")
+        for err in result.errors:
+            click.echo(f"   Error: {err}")
         for w in result.warnings:
             click.echo(f"   Warning: {w}")
     return result.valid
@@ -371,9 +394,10 @@ def _validate_single_file(path: Path) -> bool:
 
 # ── prompt validate ─────────────────────────────────────────────────────────────
 
+
 @cli.command("validate")
 @click.argument("prompt_files", nargs=-1, type=click.Path(exists=True, path_type=Path))
-def cmd_validate(prompt_files: tuple[Path, ...]):
+def cmd_validate(prompt_files: tuple[Path, ...]) -> None:
     """Validate one or more .prompt files without running them.
 
     \b
@@ -394,10 +418,13 @@ def cmd_validate(prompt_files: tuple[Path, ...]):
 
 # ── prompt inspect helpers ──────────────────────────────────────────────────────
 
+
 def _print_inspect_body(pf: Any, runtime_vars: dict[str, Any]) -> None:
     """Print the rendered or raw prompt body for the inspect command."""
     if runtime_vars or all(not s.required for s in pf.vars.values()):
-        click.echo(click.style("\n── Resolved Prompt ──────────────────────────────", fg="cyan", bold=True))
+        click.echo(
+            click.style("\n── Resolved Prompt ──────────────────────────────", fg="cyan", bold=True)
+        )
         try:
             system, body = render_prompt(pf, runtime_vars)
             if system:
@@ -409,16 +436,19 @@ def _print_inspect_body(pf: Any, runtime_vars: dict[str, Any]) -> None:
         except PromptRenderError as e:
             _echo_warning(f"Cannot render — {e}")
     else:
-        click.echo(click.style("\n── Raw Prompt Body ──────────────────────────────", fg="cyan", bold=True))
+        click.echo(
+            click.style("\n── Raw Prompt Body ──────────────────────────────", fg="cyan", bold=True)
+        )
         click.echo(pf.body)
 
 
 # ── prompt inspect ──────────────────────────────────────────────────────────────
 
+
 @cli.command("inspect")
 @click.argument("prompt_file", type=click.Path(exists=True, path_type=Path))
 @click.option("--var", "vars_list", multiple=True, metavar="KEY=VALUE")
-def cmd_inspect(prompt_file: Path, vars_list: tuple[str, ...]):
+def cmd_inspect(prompt_file: Path, vars_list: tuple[str, ...]) -> None:
     """Show metadata and resolved prompt body without calling LLM.
 
     \b
@@ -434,7 +464,9 @@ def cmd_inspect(prompt_file: Path, vars_list: tuple[str, ...]):
         sys.exit(1)
 
     # Metadata
-    click.echo(click.style("── Prompt Metadata ──────────────────────────────", fg="cyan", bold=True))
+    click.echo(
+        click.style("── Prompt Metadata ──────────────────────────────", fg="cyan", bold=True)
+    )
     click.echo(f"  Name        : {pf.name or '(not set)'}")
     click.echo(f"  Description : {pf.description or '(not set)'}")
     click.echo(f"  Provider    : {pf.provider}")
@@ -454,6 +486,7 @@ def cmd_inspect(prompt_file: Path, vars_list: tuple[str, ...]):
 
 
 # ── prompt new helpers ─────────────────────────────────────────────────────────
+
 
 def _collect_vars_interactively() -> list[str]:
     """Interactively collect variable declarations; return list of YAML var lines."""
@@ -507,8 +540,7 @@ def _build_prompt_content(
     if vars_lines:
         var_names = [v.strip().split(":")[0] for v in vars_lines]
         body_placeholders = " ".join(
-            f"{{{{{{{{ {v} }}}}}}}}".replace("{{ ", "{{").replace(" }}", "}}")
-            for v in var_names
+            f"{{{{{{{{ {v} }}}}}}}}".replace("{{ ", "{{").replace(" }}", "}}") for v in var_names
         )
         lines.append(f"Write your prompt here. Available variables: {body_placeholders}")
     else:
@@ -529,10 +561,13 @@ _PROVIDER_DEFAULTS = {
 @cli.command("new")
 @click.argument("output", default="", metavar="[FILE]")
 @click.option("--name", default="", help="Prompt name")
-@click.option("--provider", default="",
-              type=click.Choice(["anthropic", "openai", "ollama"], case_sensitive=False),
-              help="Provider to use")
-def cmd_new(output: str, name: str, provider: str):
+@click.option(
+    "--provider",
+    default="",
+    type=click.Choice(["anthropic", "openai", "ollama"], case_sensitive=False),
+    help="Provider to use",
+)
+def cmd_new(output: str, name: str, provider: str) -> None:
     """Scaffold a new .prompt file interactively.
 
     \b

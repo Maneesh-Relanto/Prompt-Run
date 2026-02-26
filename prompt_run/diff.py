@@ -88,8 +88,12 @@ def format_diff_plain(diff: DiffResult, width: int = 100) -> str:
                 lines.append("")
         return lines or ["(empty)"]
 
-    content_a = diff.result_a.response.content if diff.result_a.response else diff.result_a.rendered_body
-    content_b = diff.result_b.response.content if diff.result_b.response else diff.result_b.rendered_body
+    content_a = (
+        diff.result_a.response.content if diff.result_a.response else diff.result_a.rendered_body
+    )
+    content_b = (
+        diff.result_b.response.content if diff.result_b.response else diff.result_b.rendered_body
+    )
 
     lines_a = _wrap(content_a)
     lines_b = _wrap(content_b)

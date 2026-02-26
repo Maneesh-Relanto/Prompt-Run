@@ -8,7 +8,7 @@ Auth: ANTHROPIC_API_KEY environment variable.
 from __future__ import annotations
 
 import os
-from typing import Iterator
+from typing import Any, Iterator
 
 from .base import BaseProvider, ProviderResponse, ProviderError
 
@@ -18,14 +18,14 @@ DEFAULT_MODEL = "claude-sonnet-4-6"
 class AnthropicProvider(BaseProvider):
     name = "anthropic"
 
-    def __init__(self):
+    def __init__(self) -> None:
         try:
             import anthropic as anthropic_sdk
+
             self._sdk = anthropic_sdk
         except ImportError:
             raise ProviderError(
-                "The `anthropic` package is not installed.\n"
-                "Run: pip install anthropic"
+                "The `anthropic` package is not installed.\nRun: pip install anthropic"
             )
 
         api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -53,7 +53,7 @@ class AnthropicProvider(BaseProvider):
     ) -> ProviderResponse:
         model = model or DEFAULT_MODEL
 
-        kwargs: dict = {
+        kwargs: dict[str, Any] = {
             "model": model,
             "max_tokens": max_tokens,
             "temperature": temperature,
@@ -100,7 +100,7 @@ class AnthropicProvider(BaseProvider):
     ) -> Iterator[str]:
         model = model or DEFAULT_MODEL
 
-        kwargs: dict = {
+        kwargs: dict[str, Any] = {
             "model": model,
             "max_tokens": max_tokens,
             "temperature": temperature,

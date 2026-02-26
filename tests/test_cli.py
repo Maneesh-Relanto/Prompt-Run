@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
@@ -38,6 +38,7 @@ def _make_prompt(tmp_path: Path, body: str = "Summarize {{text}}.") -> Path:
 
 # ── prompt run ─────────────────────────────────────────────────────────────────
 
+
 class TestCmdRun:
     def test_dry_run_prints_resolved_prompt(self, tmp_path: Path):
         p = _make_prompt(tmp_path)
@@ -57,6 +58,7 @@ class TestCmdRun:
         with patch("prompt_run.cli.run_prompt_file") as mock_run:
             from prompt_run.runner import RunResult
             from prompt_run.parser import parse_prompt_string
+
             pf = parse_prompt_string("---\nprovider: anthropic\n---\nHello")
             mock_run.return_value = RunResult(
                 prompt_file=pf,
@@ -74,6 +76,7 @@ class TestCmdRun:
         with patch("prompt_run.cli.run_prompt_file") as mock_run:
             from prompt_run.runner import RunResult
             from prompt_run.parser import parse_prompt_string
+
             pf = parse_prompt_string("---\nprovider: anthropic\n---\nHello")
             mock_run.return_value = RunResult(
                 prompt_file=pf,
@@ -100,6 +103,7 @@ class TestCmdRun:
 
 
 # ── prompt validate ────────────────────────────────────────────────────────────
+
 
 class TestCmdValidate:
     def test_valid_file_exits_0(self, tmp_path: Path):
@@ -135,18 +139,25 @@ class TestCmdValidate:
 
 # ── prompt inspect ─────────────────────────────────────────────────────────────
 
+
 class TestCmdNew:
     def test_new_to_stdout_with_defaults(self):
         # Accepts all defaults: desc, model, temp, max_tokens, system, no vars
         inputs = "\n\n\n\n\n\n"
-        result = RUNNER.invoke(cli, ["new", "--name", "test-prompt", "--provider", "anthropic"], input=inputs)
+        result = RUNNER.invoke(
+            cli, ["new", "--name", "test-prompt", "--provider", "anthropic"], input=inputs
+        )
         assert result.exit_code == 0
         assert "---" in result.output
 
     def test_new_to_file(self, tmp_path: Path):
         dest = tmp_path / "out.prompt"
         inputs = "\n\n\n\n\n\n"
-        result = RUNNER.invoke(cli, ["new", str(dest), "--name", "test-prompt", "--provider", "anthropic"], input=inputs)
+        result = RUNNER.invoke(
+            cli,
+            ["new", str(dest), "--name", "test-prompt", "--provider", "anthropic"],
+            input=inputs,
+        )
         assert result.exit_code == 0
         assert dest.exists()
         content = dest.read_text(encoding="utf-8")
@@ -185,14 +196,14 @@ class TestCmdInspect:
         assert result.exit_code == 0
         assert "hello world" in result.output
 
-
-# ── prompt diff ────────────────────────────────────────────────────────────────
+    # ── prompt diff ────────────────────────────────────────────────────────────────
 
     def test_show_prompt_flag(self, tmp_path: Path):
         p = _make_prompt(tmp_path)
         with patch("prompt_run.cli.run_prompt_file") as mock_run:
             from prompt_run.runner import RunResult
             from prompt_run.parser import parse_prompt_string
+
             pf = parse_prompt_string("---\nprovider: anthropic\n---\nHello")
             mock_run.return_value = RunResult(
                 prompt_file=pf,
@@ -211,6 +222,7 @@ class TestCmdInspect:
         with patch("prompt_run.cli.run_prompt_file") as mock_run:
             from prompt_run.runner import RunResult
             from prompt_run.parser import parse_prompt_string
+
             pf = parse_prompt_string("---\nprovider: anthropic\n---\nHello")
             mock_run.return_value = RunResult(
                 prompt_file=pf,
@@ -229,6 +241,7 @@ class TestCmdInspect:
         p = _make_prompt(tmp_path)
         with patch("prompt_run.cli.run_prompt_file") as mock_run:
             from prompt_run.providers import ProviderError
+
             mock_run.side_effect = ProviderError("API key missing")
             result = RUNNER.invoke(cli, ["run", str(p), "--var", "text=hello"])
         assert result.exit_code == 1
@@ -243,6 +256,7 @@ class TestCmdRunOverrides:
         with patch("prompt_run.cli.run_prompt_file") as mock_run:
             from prompt_run.runner import RunResult
             from prompt_run.parser import parse_prompt_string
+
             pf = parse_prompt_string("---\nprovider: anthropic\n---\nHello")
             mock_run.return_value = RunResult(
                 prompt_file=pf,
@@ -251,9 +265,7 @@ class TestCmdRunOverrides:
                 response=_MOCK_RESPONSE,
                 dry_run=False,
             )
-            result = RUNNER.invoke(
-                cli, ["run", str(p), "--var", "text=hi"] + extra_args
-            )
+            result = RUNNER.invoke(cli, ["run", str(p), "--var", "text=hi"] + extra_args)
             config = mock_run.call_args[0][1]  # second positional arg is RunConfig
         return result, config
 
@@ -304,6 +316,7 @@ class TestCmdDiff:
             from prompt_run.diff import DiffResult
             from prompt_run.runner import RunResult
             from prompt_run.parser import parse_prompt_string
+
             pf = parse_prompt_string("---\nprovider: anthropic\n---\nHello")
             rr = RunResult(
                 prompt_file=pf,
@@ -312,9 +325,7 @@ class TestCmdDiff:
                 response=_MOCK_RESPONSE,
                 dry_run=False,
             )
-            mock_diff.return_value = DiffResult(
-                result_a=rr, result_b=rr, label_a="A", label_b="B"
-            )
+            mock_diff.return_value = DiffResult(result_a=rr, result_b=rr, label_a="A", label_b="B")
             result = RUNNER.invoke(
                 cli,
                 ["diff", str(p), str(p), "--var", "text=hi", "--json"],

@@ -19,6 +19,7 @@ from prompt_run.providers import get_provider, PROVIDERS
 
 # ── Shared exception stubs ─────────────────────────────────────────────────────
 
+
 class _ConnErr(Exception):
     pass
 
@@ -40,6 +41,7 @@ class _StatusErr(Exception):
 
 # ── providers/__init__.py ──────────────────────────────────────────────────────
 
+
 class TestGetProvider:
     def test_all_known_providers_registered(self):
         assert set(PROVIDERS.keys()) == {"anthropic", "openai", "ollama"}
@@ -55,6 +57,7 @@ class TestGetProvider:
 
 # ── AnthropicProvider ──────────────────────────────────────────────────────────
 
+
 def _make_anthropic(api_key: str = "sk-test") -> tuple:
     """Build an AnthropicProvider with a fully mocked SDK."""
     mock_sdk = MagicMock()
@@ -68,6 +71,7 @@ def _make_anthropic(api_key: str = "sk-test") -> tuple:
     with patch.dict(sys.modules, {"anthropic": mock_sdk}):
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": api_key}):
             from prompt_run.providers.anthropic import AnthropicProvider
+
             provider = AnthropicProvider()
 
     return provider, mock_sdk, mock_client
@@ -80,6 +84,7 @@ class TestAnthropicProvider:
             with patch.dict(os.environ, {}, clear=True):
                 os.environ.pop("ANTHROPIC_API_KEY", None)
                 from prompt_run.providers.anthropic import AnthropicProvider
+
                 with pytest.raises(ProviderError, match="ANTHROPIC_API_KEY"):
                     AnthropicProvider()
 
@@ -203,6 +208,7 @@ class TestAnthropicProvider:
 
 # ── OpenAIProvider ─────────────────────────────────────────────────────────────
 
+
 def _make_openai(api_key: str = "sk-test") -> tuple:
     """Build an OpenAIProvider with a fully mocked SDK."""
     mock_sdk = MagicMock()
@@ -216,6 +222,7 @@ def _make_openai(api_key: str = "sk-test") -> tuple:
     with patch.dict(sys.modules, {"openai": mock_sdk}):
         with patch.dict(os.environ, {"OPENAI_API_KEY": api_key}):
             from prompt_run.providers.openai import OpenAIProvider
+
             provider = OpenAIProvider()
 
     return provider, mock_sdk, mock_client
@@ -228,6 +235,7 @@ class TestOpenAIProvider:
             with patch.dict(os.environ, {}, clear=True):
                 os.environ.pop("OPENAI_API_KEY", None)
                 from prompt_run.providers.openai import OpenAIProvider
+
                 with pytest.raises(ProviderError, match="OPENAI_API_KEY"):
                     OpenAIProvider()
 
@@ -309,7 +317,9 @@ class TestOpenAIProvider:
 
     def test_complete_api_status_error(self):
         provider, _, mock_client = _make_openai()
-        mock_client.chat.completions.create.side_effect = _StatusErr(status_code=503, message="unavailable")
+        mock_client.chat.completions.create.side_effect = _StatusErr(
+            status_code=503, message="unavailable"
+        )
         with pytest.raises(ProviderError, match="API error 503"):
             provider.complete("", "Hi", "gpt-4o", 0.7, 128)
 
@@ -348,17 +358,21 @@ class TestOpenAIProvider:
 
 # ── OllamaProvider ─────────────────────────────────────────────────────────────
 
+
 def _make_ollama():
     from prompt_run.providers.ollama import OllamaProvider
+
     return OllamaProvider()
 
 
 def _mock_ollama_response(content: str, in_tok: int = 10, out_tok: int = 5) -> MagicMock:
-    payload = json.dumps({
-        "message": {"content": content},
-        "prompt_eval_count": in_tok,
-        "eval_count": out_tok,
-    }).encode()
+    payload = json.dumps(
+        {
+            "message": {"content": content},
+            "prompt_eval_count": in_tok,
+            "eval_count": out_tok,
+        }
+    ).encode()
     mock_resp = MagicMock()
     mock_resp.__enter__ = MagicMock(return_value=mock_resp)
     mock_resp.__exit__ = MagicMock(return_value=False)

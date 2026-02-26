@@ -20,7 +20,7 @@ from prompt_run.runner import (
     _resolve_runtime_vars,
 )
 from prompt_run.parser import parse_prompt_string
-from prompt_run.providers.base import ProviderResponse, ProviderError
+from prompt_run.providers.base import ProviderResponse
 
 
 # Silence stdin reads in all tests by default
@@ -61,12 +61,21 @@ def _mock_provider(response: ProviderResponse = _MOCK_RESPONSE) -> MagicMock:
 
 
 def _config(**kwargs) -> RunConfig:
-    defaults: dict[str, Any] = {"vars": {}, "model": "", "provider": "", "temperature": None, "max_tokens": None, "system": "", "dry_run": False}
+    defaults: dict[str, Any] = {
+        "vars": {},
+        "model": "",
+        "provider": "",
+        "temperature": None,
+        "max_tokens": None,
+        "system": "",
+        "dry_run": False,
+    }
     defaults.update(kwargs)
     return RunConfig(**defaults)
 
 
 # ── run_prompt_string ──────────────────────────────────────────────────────────
+
 
 class TestRunPromptString:
     def test_returns_run_result(self):
@@ -85,6 +94,7 @@ class TestRunPromptString:
 
 
 # ── run_prompt_file ────────────────────────────────────────────────────────────
+
 
 class TestRunPromptFile:
     def test_run_from_file(self, tmp_path: Path):
@@ -106,7 +116,9 @@ class TestRunPromptFile:
 
     def test_model_override(self, tmp_path: Path):
         p = tmp_path / "test.prompt"
-        p.write_text("---\nprovider: anthropic\nmodel: claude-sonnet-4-6\n---\nHello", encoding="utf-8")
+        p.write_text(
+            "---\nprovider: anthropic\nmodel: claude-sonnet-4-6\n---\nHello", encoding="utf-8"
+        )
         mock_prov = _mock_provider()
         with patch("prompt_run.runner.get_provider", return_value=mock_prov):
             run_prompt_file(p, _config(model="gpt-4o", provider="openai"))
@@ -143,6 +155,7 @@ class TestRunPromptFile:
 
 # ── stream_run_prompt_file ─────────────────────────────────────────────────────
 
+
 class TestStreamRunPromptFile:
     def test_yields_chunks(self, tmp_path: Path):
         p = tmp_path / "test.prompt"
@@ -165,6 +178,7 @@ class TestStreamRunPromptFile:
 
 
 # ── _resolve_runtime_vars (stdin injection) ────────────────────────────────────
+
 
 class TestResolveRuntimeVars:
     def test_no_stdin_returns_config_vars(self, monkeypatch):

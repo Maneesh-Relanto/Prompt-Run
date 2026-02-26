@@ -23,8 +23,7 @@ def get_provider(name: str) -> BaseProvider:
     name = name.lower().strip()
     if name not in PROVIDERS:
         raise ProviderError(
-            f"Unknown provider '{name}'. "
-            f"Available: {', '.join(sorted(PROVIDERS.keys()))}"
+            f"Unknown provider '{name}'. Available: {', '.join(sorted(PROVIDERS.keys()))}"
         )
     return PROVIDERS[name]()
 

@@ -13,21 +13,22 @@ from typing import Any, Iterator
 
 from .parser import PromptFile, parse_prompt_file, parse_prompt_string
 from .renderer import render_prompt, read_stdin_if_piped
-from .providers import get_provider, ProviderResponse, ProviderError
+from .providers import get_provider, ProviderResponse
 
 
 @dataclass
 class RunConfig:
     """Runtime overrides. Any field set here wins over the .prompt file defaults."""
+
     vars: dict[str, Any]
     model: str = ""
     provider: str = ""
     temperature: float | None = None
     max_tokens: int | None = None
     system: str = ""
-    dry_run: bool = False      # print resolved prompt, don't call LLM
-    stdin_var: str = ""        # if set, pipe stdin content into this var
-    stream: bool = False       # stream tokens to stdout as they arrive
+    dry_run: bool = False  # print resolved prompt, don't call LLM
+    stdin_var: str = ""  # if set, pipe stdin content into this var
+    stream: bool = False  # stream tokens to stdout as they arrive
 
 
 @dataclass
@@ -35,7 +36,7 @@ class RunResult:
     prompt_file: PromptFile
     rendered_system: str
     rendered_body: str
-    response: ProviderResponse | None   # None in dry-run mode
+    response: ProviderResponse | None  # None in dry-run mode
     dry_run: bool = False
 
 
@@ -72,8 +73,7 @@ def _resolve_runtime_vars(config: RunConfig, pf: PromptFile) -> dict[str, Any]:
         runtime_vars[config.stdin_var] = piped
     else:
         required_vars = [
-            name for name, spec in pf.vars.items()
-            if spec.required and name not in runtime_vars
+            name for name, spec in pf.vars.items() if spec.required and name not in runtime_vars
         ]
         if len(required_vars) == 1:
             runtime_vars[required_vars[0]] = piped

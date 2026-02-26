@@ -19,15 +19,13 @@ DEFAULT_MODEL = "gpt-4o"
 class OpenAIProvider(BaseProvider):
     name = "openai"
 
-    def __init__(self):
+    def __init__(self) -> None:
         try:
             import openai as openai_sdk
+
             self._sdk = openai_sdk
         except ImportError:
-            raise ProviderError(
-                "The `openai` package is not installed.\n"
-                "Run: pip install openai"
-            )
+            raise ProviderError("The `openai` package is not installed.\nRun: pip install openai")
 
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
@@ -51,7 +49,7 @@ class OpenAIProvider(BaseProvider):
                 api_version=api_version,
             )
         else:
-            self._client = self._sdk.OpenAI(api_key=api_key)
+            self._client = self._sdk.OpenAI(api_key=api_key)  # type: ignore[assignment]
 
     def default_model(self) -> str:
         return DEFAULT_MODEL
@@ -74,7 +72,7 @@ class OpenAIProvider(BaseProvider):
         try:
             response = self._client.chat.completions.create(
                 model=model,
-                messages=messages,
+                messages=messages,  # type: ignore[arg-type]
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
@@ -127,13 +125,13 @@ class OpenAIProvider(BaseProvider):
         try:
             stream = self._client.chat.completions.create(
                 model=model,
-                messages=messages,
+                messages=messages,  # type: ignore[arg-type]
                 temperature=temperature,
                 max_tokens=max_tokens,
                 stream=True,
             )
             for chunk in stream:
-                delta = chunk.choices[0].delta if chunk.choices else None
+                delta = chunk.choices[0].delta if chunk.choices else None  # type: ignore[union-attr]
                 if delta and delta.content:
                     yield delta.content
         except self._sdk.AuthenticationError:
