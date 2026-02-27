@@ -18,7 +18,7 @@ Report security issues privately via GitHub's built-in vulnerability reporting:
 2. Click **"Report a vulnerability"**.
 3. Fill in the details — what you found, how to reproduce it, and the potential impact.
 
-You can also email the maintainer directly. A reply will be sent within **48 hours** and a fix will be prioritised accordingly.
+A response will be sent within **48 hours** and a fix will be prioritised accordingly.
 
 ## What to Report
 
