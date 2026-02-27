@@ -4,7 +4,9 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Maneesh-Relanto/Prompt-Run/ci.yml?branch=main&style=flat-square&label=CI&color=16a34a&logo=github-actions&logoColor=white)](https://github.com/Maneesh-Relanto/Prompt-Run/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/prompt-run?style=flat-square&color=0284c7&logo=pypi&logoColor=white)](https://pypi.org/project/prompt-run/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/prompt-run?style=flat-square&color=0284c7&logo=pypi&logoColor=white)](https://pypi.org/project/prompt-run/)
 [![Python](https://img.shields.io/pypi/pyversions/prompt-run?style=flat-square&color=7c3aed&logo=python&logoColor=white)](https://pypi.org/project/prompt-run/)
+[![Coverage](https://img.shields.io/badge/coverage-90%25-22c55e?style=flat-square)](https://github.com/Maneesh-Relanto/Prompt-Run)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b?style=flat-square)](LICENSE)
 
 [![Anthropic](https://img.shields.io/badge/Anthropic-Claude-b45309?style=flat-square&logo=anthropic&logoColor=white)](https://www.anthropic.com)
@@ -17,6 +19,32 @@
 [![No Account Required](https://img.shields.io/badge/account-not%20required-0ea5e9?style=flat-square&logo=checkmarx&logoColor=white)](#privacy--security)
 
 Prompts are code. Treat them like it.
+
+---
+
+## Table of contents
+
+- [Privacy & Security](#-privacy--security)
+- [Quick start](#quick-start)
+- [Why?](#why)
+- [Why not LangChain / promptfoo / Langfuse?](#why-not-langchain--promptfoo--langfuse)
+- [Install](#install)
+- [The `.prompt` file format](#the-prompt-file-format)
+- [Commands](#commands)
+  - [`prompt new`](#prompt-new)
+  - [`prompt run`](#prompt-run)
+  - [`prompt diff`](#prompt-diff)
+  - [`prompt validate`](#prompt-validate)
+  - [`prompt inspect`](#prompt-inspect)
+- [Use as a Python library](#use-as-a-python-library)
+- [Provider setup](#provider-setup)
+- [Use in CI / GitHub Actions](#use-in-ci--github-actions)
+- [Examples](#examples)
+- [Development setup](#development-setup)
+- [Contributing](#contributing)
+- [Changelog](#changelog)
+- [Security](#security)
+- [License](#license)
 
 ---
 
@@ -115,9 +143,18 @@ pip install "prompt-run[all]"         # Everything
 ```
 
 Set your API key:
+
+**macOS / Linux**
 ```bash
-export ANTHROPIC_API_KEY="sk-..."   # for Anthropic
-export OPENAI_API_KEY="sk-..."      # for OpenAI
+export ANTHROPIC_API_KEY="sk-ant-..."   # for Anthropic
+export OPENAI_API_KEY="sk-..."          # for OpenAI
+# Ollama needs no key — just run `ollama serve`
+```
+
+**Windows (PowerShell)**
+```powershell
+$env:ANTHROPIC_API_KEY = "sk-ant-..."   # for Anthropic
+$env:OPENAI_API_KEY = "sk-..."          # for OpenAI
 # Ollama needs no key — just run `ollama serve`
 ```
 
@@ -330,14 +367,30 @@ print(body)
 ## Provider setup
 
 ### Anthropic (default)
+
+**macOS / Linux**
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
+```
+**Windows (PowerShell)**
+```powershell
+$env:ANTHROPIC_API_KEY = "sk-ant-..."
+```
+```bash
 prompt run my.prompt --provider anthropic --model claude-sonnet-4-6
 ```
 
 ### OpenAI
+
+**macOS / Linux**
 ```bash
 export OPENAI_API_KEY="sk-..."
+```
+**Windows (PowerShell)**
+```powershell
+$env:OPENAI_API_KEY = "sk-..."
+```
+```bash
 prompt run my.prompt --provider openai --model gpt-4o
 ```
 
@@ -347,6 +400,8 @@ ollama serve          # in another terminal
 ollama pull llama3
 prompt run my.prompt --provider ollama --model llama3
 ```
+
+> **Tip — persist API keys across sessions:** Add the `export` lines to your `~/.bashrc`, `~/.zshrc`, or `$PROFILE` (PowerShell) so you don't need to set them each time.
 
 ---
 
@@ -376,6 +431,114 @@ The `examples/` folder contains ready-to-run `.prompt` files:
 | [translate.prompt](examples/translate.prompt) | Translate text to any language |
 | [classify.prompt](examples/classify.prompt) | Classify text into categories |
 | [extract-json.prompt](examples/extract-json.prompt) | Extract structured JSON from text |
+
+---
+
+## Development setup
+
+Everything you need to go from zero to running tests locally.
+
+### Prerequisites
+
+- Python 3.11 or later — [python.org/downloads](https://www.python.org/downloads/)
+- git
+- (Optional) [make](https://www.gnu.org/software/make/) — convenience wrapper; all commands also work without it
+
+---
+
+### Step 1 — Clone the repo
+
+```bash
+git clone https://github.com/Maneesh-Relanto/Prompt-Run
+cd Prompt-Run
+```
+
+---
+
+### Step 2 — Create a virtual environment
+
+**macOS / Linux**
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+**Windows (PowerShell)**
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+---
+
+### Step 3 — Install in editable mode with dev dependencies
+
+```bash
+pip install -e ".[dev]"
+# or
+make install
+```
+
+This installs:
+- `prompt-run` itself in editable mode (changes to source take effect immediately)
+- `pytest`, `pytest-cov` for testing
+- `anthropic` and `openai` SDKs (used in tests via mocks — no API key needed)
+- `types-PyYAML` for mypy
+
+---
+
+### Step 4 — Run the test suite
+
+```bash
+pytest                          # run all 113 tests
+pytest -v                       # verbose output
+pytest tests/test_parser.py     # single module
+pytest -k "test_dry_run"        # filter by name
+pytest --tb=short -q            # compact (same as CI)
+
+# or
+make test
+```
+
+> Tests never call real LLM APIs — all providers are fully mocked. No API key required.
+
+---
+
+### Step 5 — Lint and type-check
+
+```bash
+make lint       # ruff check + ruff format --check + mypy --strict
+make format     # auto-fix formatting with ruff
+```
+
+Or manually:
+```bash
+ruff check .
+ruff format --check .
+mypy prompt_run --ignore-missing-imports
+```
+
+---
+
+### Step 6 — Validate example prompts
+
+```bash
+prompt validate examples/*.prompt
+```
+
+All four examples should pass with no errors.
+
+---
+
+### Step 7 — Make your change, then verify everything passes
+
+```bash
+make test        # all tests pass
+make lint        # no ruff or mypy errors
+prompt validate examples/*.prompt   # example prompts still valid
+```
+
+Then open a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full PR checklist, good first issues, and how to add a new provider.
 
 ---
 
