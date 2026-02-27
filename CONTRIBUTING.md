@@ -138,8 +138,8 @@ class MyProvider(BaseProvider):
         # call API, return ProviderResponse(content, model, provider, input_tokens, output_tokens, total_tokens)
         ...
 
-    def stream(self, system, prompt, model, temperature, max_tokens) -> Iterator[str]:
-        # yield text chunks; if streaming is unsupported, call super().stream(...)
+    def stream_complete(self, system, prompt, model, temperature, max_tokens) -> Iterator[str]:
+        # yield text chunks; if streaming is unsupported, call super().stream_complete(...)
         ...
 ```
 

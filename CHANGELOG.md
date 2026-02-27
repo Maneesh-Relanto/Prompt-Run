@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `__version__` now resolved dynamically from installed package metadata via `importlib.metadata` (falls back to `0.1.0` when running from uninstalled source)
+
+### Fixed
+- `SECURITY.md` — removed incomplete email contact sentence that had no address
+
 ---
 
 ## [0.1.0] — 2026-02-26

@@ -385,6 +385,18 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes.
+
+---
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for the supported versions and vulnerability reporting policy.
+
+---
+
 ## License
 
 MIT
