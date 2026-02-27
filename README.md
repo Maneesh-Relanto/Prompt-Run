@@ -4,8 +4,8 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Maneesh-Relanto/Prompt-Run/ci.yml?branch=main&style=flat-square&label=CI&color=16a34a&logo=github-actions&logoColor=white)](https://github.com/Maneesh-Relanto/Prompt-Run/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/prompt-run?style=flat-square&color=0284c7&logo=pypi&logoColor=white)](https://pypi.org/project/prompt-run/)
-[![PyPI Downloads](https://img.shields.io/pypi/dm/prompt-run?style=flat-square&color=0284c7&logo=pypi&logoColor=white)](https://pypi.org/project/prompt-run/)
-[![Python](https://img.shields.io/pypi/pyversions/prompt-run?style=flat-square&color=7c3aed&logo=python&logoColor=white)](https://pypi.org/project/prompt-run/)
+[![PyPI Downloads](https://img.shields.io/badge/downloads%2Fmo-TBU-0284c7?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/prompt-run/)
+[![Python](https://img.shields.io/pypi/pyversions/prompt-run?style=flat-square&color=7c3aed&logo=python&logoColor=white&v=1)](https://pypi.org/project/prompt-run/)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-22c55e?style=flat-square)](https://github.com/Maneesh-Relanto/Prompt-Run)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b?style=flat-square)](LICENSE)
 
