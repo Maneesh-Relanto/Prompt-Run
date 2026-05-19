@@ -22,7 +22,7 @@ First off — thank you! prompt-run is an open project and every contribution ma
 ## Quick start
 
 ```bash
-git clone https://github.com/Maneesh-Relanto/Prompt-Run
+git clone https://github.com/maneesh-kumar-thakur/Prompt-Run
 cd Prompt-Run
 pip install -e ".[dev]"
 ```
@@ -213,4 +213,4 @@ Use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.md). Include:
 
 ## Questions?
 
-Open a [GitHub Discussion](https://github.com/Maneesh-Relanto/Prompt-Run/discussions) — issues are for bugs and feature requests, discussions are for everything else.
+Open a [GitHub Discussion](https://github.com/maneesh-kumar-thakur/Prompt-Run/discussions) — issues are for bugs and feature requests, discussions are for everything else.

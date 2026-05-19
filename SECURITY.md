@@ -14,7 +14,7 @@ Only the latest release receives security fixes. If you are running an older ver
 
 Report security issues privately via GitHub's built-in vulnerability reporting:
 
-1. Go to the [Security tab](https://github.com/Maneesh-Relanto/Prompt-Run/security) of this repository.
+1. Go to the [Security tab](https://github.com/maneesh-kumar-thakur/Prompt-Run/security) of this repository.
 2. Click **"Report a vulnerability"**.
 3. Fill in the details — what you found, how to reproduce it, and the potential impact.
 
