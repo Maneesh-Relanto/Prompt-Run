@@ -9,10 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.1.1] — 2026-05-19
+
 ### Changed
-- `__version__` now resolved dynamically from installed package metadata via `importlib.metadata` (falls back to `0.1.0` when running from uninstalled source)
+- `__version__` now resolved dynamically from installed package metadata via `importlib.metadata` (falls back to `0.1.1` when running from uninstalled source)
 
 ### Fixed
+- All repository URLs across `README.md`, `pyproject.toml`, `CHANGELOG.md`, `CONTRIBUTING.md`, and `SECURITY.md` now point to `maneesh-kumar-thakur/Prompt-Run` (the canonical repo). Previous links pointed to a non-canonical org and broke from PyPI / shields.io.
 - `SECURITY.md` — removed incomplete email contact sentence that had no address
 
 ---
@@ -43,5 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Secret scanning enabled via `.github/secret_scanning.yml`
 - `[tool.pytest.ini_options]`, `[tool.mypy]`, and `[tool.ruff]` config in `pyproject.toml`
 
-[Unreleased]: https://github.com/Maneesh-Relanto/Prompt-Run/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/Maneesh-Relanto/Prompt-Run/releases/tag/v0.1.0
+[Unreleased]: https://github.com/maneesh-kumar-thakur/Prompt-Run/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/maneesh-kumar-thakur/Prompt-Run/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/maneesh-kumar-thakur/Prompt-Run/releases/tag/v0.1.0
